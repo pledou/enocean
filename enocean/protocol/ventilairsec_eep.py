@@ -49,17 +49,24 @@ def _load_dynamic_fields() -> dict[str, dict[str, Any]]:
 
     try:
         with open(_EEP_PATH, "r", encoding="utf-8") as xml_file:
-            soup = BeautifulSoup(xml_file.read(), "html.parser")
+            soup = BeautifulSoup(xml_file.read(), "xml")
     except OSError as err:
         _LOGGER.warning("Unable to read EEP.xml for Ventilairsec: %s", err)
         return {}
 
-    telegram = soup.find("telegram", {"rorg": "0xD1079"})
-    if not telegram:
+    # Find all Ventilairsec telegrams (RORG 0xD1079)
+    telegrams = soup.find_all("telegram", {"rorg": "0xD1079"})
+    if not telegrams:
         _LOGGER.warning("Ventilairsec telegram (0xD1079) not found in EEP.xml")
         return {}
 
-    profiles = telegram.find("profiles", {"func": "0x01"})
+    # Find the one with func="0x01"
+    profiles = None
+    for telegram in telegrams:
+        profiles = telegram.find("profiles", {"func": "0x01"})
+        if profiles:
+            break
+
     if not profiles:
         _LOGGER.warning("Ventilairsec func 0x01 profiles not found in EEP.xml")
         return {}
