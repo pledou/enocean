@@ -60,6 +60,7 @@ class RORG(IntEnum):
     SEC = 0x30
     SEC_ENCAPS = 0x31
     UTE = 0xD4
+    CHAINED = 0xC8
 
 
 # Results for message parsing

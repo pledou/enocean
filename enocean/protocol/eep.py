@@ -37,18 +37,22 @@ class EEP(object):
             self.init_ok = False
 
     def __load_xml(self):
-        self.telegrams = {
-            enocean.utils.from_hex_string(telegram["rorg"]): {
-                enocean.utils.from_hex_string(function["func"]): {
-                    enocean.utils.from_hex_string(
-                        type["type"],
-                    ): type
-                    for type in function.find_all("profile")
-                }
-                for function in telegram.find_all("profiles")
-            }
-            for telegram in self.soup.find_all("telegram")
-        }
+        # Some vendor-specific profiles (e.g., Ventilairsec MSC) encode rorg as
+        # multi-byte values like 0xD1079 in EEP.xml. Only the lowest byte is the
+        # actual RORG value (0xD1). Normalize to the lowest byte so lookups work.
+        self.telegrams = {}
+        for telegram in self.soup.find_all("telegram"):
+            raw_rorg = enocean.utils.from_hex_string(telegram["rorg"])
+            rorg = raw_rorg & 0xFF
+            self.telegrams.setdefault(rorg, {})
+
+            for function in telegram.find_all("profiles"):
+                func = enocean.utils.from_hex_string(function["func"])
+                self.telegrams[rorg].setdefault(func, {})
+
+                for profile_type in function.find_all("profile"):
+                    p_type = enocean.utils.from_hex_string(profile_type["type"])
+                    self.telegrams[rorg][func][p_type] = profile_type
 
     @staticmethod
     def _get_raw(source, bitarray):
