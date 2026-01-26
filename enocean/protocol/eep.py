@@ -38,12 +38,10 @@ class EEP(object):
 
     def __load_xml(self):
         # Some vendor-specific profiles (e.g., Ventilairsec MSC) encode rorg as
-        # multi-byte values like 0xD1079 in EEP.xml. Only the lowest byte is the
-        # actual RORG value (0xD1). Normalize to the lowest byte so lookups work.
+        # multi-byte values like 0xD1079 in EEP.xml. In these case, whe should index the multi-byte hex
         self.telegrams = {}
         for telegram in self.soup.find_all("telegram"):
-            raw_rorg = enocean.utils.from_hex_string(telegram["rorg"])
-            rorg = raw_rorg & 0xFF
+            rorg = enocean.utils.from_hex_string(telegram["rorg"])
             self.telegrams.setdefault(rorg, {})
 
             for function in telegram.find_all("profiles"):

@@ -4,6 +4,7 @@ import logging
 import datetime
 
 import threading
+
 try:
     import queue
 except ImportError:
@@ -13,11 +14,12 @@ from enocean.protocol.constants import PACKET, PARSE_RESULT, RETURN_CODE
 
 
 class Communicator(threading.Thread):
-    '''
+    """
     Communicator base-class for EnOcean.
     Not to be used directly, only serves as base class for SerialCommunicator etc.
-    '''
-    logger = logging.getLogger('enocean.communicators.Communicator')
+    """
+
+    logger = logging.getLogger("enocean.communicators.Communicator")
 
     def __init__(self, callback=None, teach_in=True):
         super(Communicator, self).__init__()
@@ -37,10 +39,10 @@ class Communicator(threading.Thread):
         self.teach_in = teach_in
 
     def _get_from_send_queue(self):
-        ''' Get message from send queue, if one exists '''
+        """Get message from send queue, if one exists"""
         try:
             packet = self.transmit.get(block=False)
-            self.logger.info('Sending packet')
+            self.logger.info("Sending packet")
             self.logger.debug(packet)
             return packet
         except queue.Empty:
@@ -49,7 +51,7 @@ class Communicator(threading.Thread):
 
     def send(self, packet):
         if not isinstance(packet, Packet):
-            self.logger.error('Object to send must be an instance of Packet')
+            self.logger.error("Object to send must be an instance of Packet")
             return False
         self.transmit.put(packet)
         return True
@@ -58,7 +60,7 @@ class Communicator(threading.Thread):
         self._stop_flag.set()
 
     def parse(self):
-        ''' Parses messages and puts them to receive queue '''
+        """Parses messages and puts them to receive queue"""
         # Loop while we get new messages
         while True:
             status, self._buffer, packet = Packet.parse_msg(self._buffer)
@@ -71,10 +73,23 @@ class Communicator(threading.Thread):
                 packet.received = datetime.datetime.now()
 
                 if isinstance(packet, UTETeachInPacket) and self.teach_in:
-                    response_packet = packet.create_response_packet(self.base_id)
-                    self.logger.info('Sending response to UTE teach-in.')
-                    self.send(response_packet)
+                    # Ensure base_id is available before creating response
+                    base_id = self.base_id
+                    if base_id is None:
+                        self.logger.warning(
+                            "Base ID not available, cannot send UTE teach-in response"
+                        )
+                    else:
+                        response_packet = packet.create_response_packet(base_id)
+                        self.logger.info("Sending response to UTE teach-in.")
+                        self.send(response_packet)
 
+                # Always put RESPONSE packets in the queue for base_id retrieval
+                # even when callback is set
+                if packet.packet_type == PACKET.RESPONSE:
+                    self.receive.put(packet)
+
+                # Route packet based on callback setting
                 if self.__callback is None:
                     self.receive.put(packet)
                 else:
@@ -83,13 +98,14 @@ class Communicator(threading.Thread):
 
     @property
     def base_id(self):
-        ''' Fetches Base ID from the transmitter, if required. Otherwise returns the currently set Base ID. '''
+        """Fetches Base ID from the transmitter, if required. Otherwise returns the currently set Base ID."""
         # If base id is already set, return it.
         if self._base_id is not None:
             return self._base_id
 
         # Send COMMON_COMMAND 0x08, CO_RD_IDBASE request to the module
-        self.send(Packet(PACKET.COMMON_COMMAND, data=[0x08]))
+        self.logger.debug("Requesting Base ID from EnOcean module")
+        self.send(Packet(PACKET.COMMON_COMMAND, data=[0x08], optional=[]))
         # Loop over 10 times, to make sure we catch the response.
         # Thanks to timeout, shouldn't take more than a second.
         # Unfortunately, all other messages received during this time are ignored.
@@ -97,7 +113,11 @@ class Communicator(threading.Thread):
             try:
                 packet = self.receive.get(block=True, timeout=0.1)
                 # We're only interested in responses to the request in question.
-                if packet.packet_type == PACKET.RESPONSE and packet.response == RETURN_CODE.OK and len(packet.response_data) == 4:  # noqa: E501
+                if (
+                    packet.packet_type == PACKET.RESPONSE
+                    and packet.response == RETURN_CODE.OK
+                    and len(packet.response_data) == 4
+                ):  # noqa: E501
                     # Base ID is set in the response data.
                     self._base_id = packet.response_data
                     # Put packet back to the Queue, so the user can also react to it if required...
@@ -112,5 +132,5 @@ class Communicator(threading.Thread):
 
     @base_id.setter
     def base_id(self, base_id):
-        ''' Sets the Base ID manually, only for testing purposes. '''
+        """Sets the Base ID manually, only for testing purposes."""
         self._base_id = base_id

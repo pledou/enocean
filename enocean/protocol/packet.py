@@ -48,13 +48,15 @@ class Packet(object):
 
         self.received = None
 
-        if not isinstance(data, list) or data is None:
+        if data is None or not isinstance(data, list):
             self.logger.warning("Replacing Packet.data with default value.")
             self.data = []
         else:
             self.data = data
 
-        if not isinstance(optional, list) or optional is None:
+        if optional is None:
+            self.optional = []
+        elif not isinstance(optional, list):
             self.logger.warning("Replacing Packet.optional with default value.")
             self.optional = []
         else:
@@ -447,6 +449,20 @@ class RadioPacket(Packet):
 
         self.rorg = self.data[0]
 
+        if self.rorg == RORG.MSC:
+            # MSC telegram: extract manufacturer and command bits
+            self.rorg_manufacturer = enocean.utils.from_bitarray(self._bit_data[0:12])
+            manufacturer_hex = f"0x{self.rorg_manufacturer:03x}"
+            if manufacturer_hex in ("0xd1079", "0x079", "0x79", "0x121"):
+                # Ventilairsec: 4-bit command at offset 12 defines func
+                self.cmd = enocean.utils.from_bitarray(self._bit_data[12:16])
+            else:
+                # Fallback: use 8-bit command starting at bit 16
+                self.cmd = enocean.utils.from_bitarray(self._bit_data[16:24])
+
+            # For MSC, func and type should have been read from UTE Teach-In
+            self.contains_eep = False
+
         # parse learn bit and FUNC/TYPE, if applicable
         if self.rorg == RORG.BS1:
             self.learn = not self._bit_data[DB0.BIT_3]
@@ -557,6 +573,14 @@ class UTETeachInPacket(RadioPacket):
         # - Set sender id and status
         if response is None:
             response = self.TEACHIN_ACCEPTED
+
+        # Validate sender_id - must be a list with 4 bytes
+        if not isinstance(sender_id, list) or len(sender_id) != 4:
+            self.logger.warning(
+                "Invalid sender_id for response packet, using broadcast"
+            )
+            sender_id = [0xFF, 0xFF, 0xFF, 0xFF]
+
         data = (
             [self.rorg]
             + [
