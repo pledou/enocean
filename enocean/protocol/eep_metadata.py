@@ -1,7 +1,8 @@
-"""Ventilairsec EEP field metadata and mappings.
+"""Generic EEP field metadata and mappings.
 
-This module builds the field definitions dynamically from the bundled
-EEP.xml to stay in sync with the official profile definitions.
+This module builds field definitions dynamically from the bundled EEP.xml and
+exposes utilities to load metadata for arbitrary telegram profiles. Use
+``load_eep_fields`` with the appropriate telegram/profile identifiers.
 """
 
 from __future__ import annotations
@@ -41,39 +42,58 @@ def _build_enum_map(enum_element) -> dict[int, str]:
     return enum_map
 
 
-def _load_dynamic_fields() -> dict[str, dict[str, Any]]:
-    """Load Ventilairsec field metadata from EEP.xml.
+def load_eep_fields(
+    telegram_rorg: str, profiles_func: str, profile_type: str
+) -> dict[str, dict[str, Any]]:
+    """Load EEP field metadata for a given telegram/profile identifiers.
 
-    Returns an empty dictionary if loading or parsing fails.
+    Args:
+        telegram_rorg: Value of the telegram's ``rorg`` attribute (e.g. "0xD1079")
+        profiles_func: Value of the enclosing ``profiles`` element's ``func``
+            attribute (e.g. "0x01")
+        profile_type: Value of the ``profile`` element's ``type`` attribute
+            (e.g. "0x00")
+
+    Returns:
+        Mapping of field shortcuts to metadata dicts. Returns an empty dict on
+        failure to read or find matching nodes.
     """
 
     try:
         with open(_EEP_PATH, "r", encoding="utf-8") as xml_file:
             soup = BeautifulSoup(xml_file.read(), "xml")
     except OSError as err:
-        _LOGGER.warning("Unable to read EEP.xml for Ventilairsec: %s", err)
+        _LOGGER.warning("Unable to read EEP.xml: %s", err)
         return {}
 
-    # Find all Ventilairsec telegrams (RORG 0xD1079)
-    telegrams = soup.find_all("telegram", {"rorg": "0xD1079"})
+    # Find matching telegram(s)
+    telegrams = soup.find_all("telegram", {"rorg": telegram_rorg})
     if not telegrams:
-        _LOGGER.warning("Ventilairsec telegram (0xD1079) not found in EEP.xml")
+        _LOGGER.debug("Telegram (rorg=%s) not found in EEP.xml", telegram_rorg)
         return {}
 
-    # Find the one with func="0x01"
+    # Find the profiles block with the specified func attribute
     profiles = None
     for telegram in telegrams:
-        profiles = telegram.find("profiles", {"func": "0x01"})
+        profiles = telegram.find("profiles", {"func": profiles_func})
         if profiles:
             break
 
     if not profiles:
-        _LOGGER.warning("Ventilairsec func 0x01 profiles not found in EEP.xml")
+        _LOGGER.debug(
+            "Profiles with func=%s not found for telegram rorg=%s",
+            profiles_func,
+            telegram_rorg,
+        )
         return {}
 
-    profile = profiles.find("profile", {"type": "0x00"})
+    profile = profiles.find("profile", {"type": profile_type})
     if not profile:
-        _LOGGER.warning("Ventilairsec profile type 0x00 not found in EEP.xml")
+        _LOGGER.debug(
+            "Profile with type=%s not found under profiles func=%s",
+            profile_type,
+            profiles_func,
+        )
         return {}
 
     fields: dict[str, dict[str, Any]] = {}
@@ -99,38 +119,37 @@ def _load_dynamic_fields() -> dict[str, dict[str, Any]]:
     return fields
 
 
-VENTILAIRSEC_FIELDS = _load_dynamic_fields()
+def get_field_metadata(
+    field_shortcut: str, fields: dict[str, dict[str, Any]]
+) -> dict[str, Any] | None:
+    """Get metadata for a field from the provided fields mapping.
 
-
-def get_field_metadata(field_shortcut: str) -> dict[str, Any] | None:
-    """Get metadata for a Ventilairsec field.
-
-    Args:
-        field_shortcut: Field shortcut (e.g., "TEMP0", "MF")
-
-    Returns:
-        Dictionary with field metadata or None if field not found
+    This function requires a fields mapping returned by :func:`load_eep_fields`.
     """
-    return VENTILAIRSEC_FIELDS.get(field_shortcut)
+    if not fields:
+        return None
+    return fields.get(field_shortcut)
 
 
 def get_field_value_with_enum(
-    parsed_data: dict[str, Any], field_shortcut: str
+    parsed_data: dict[str, Any], field_shortcut: str, fields: dict[str, dict[str, Any]]
 ) -> Any | None:
     """Get a field value from parsed data, applying enum mapping if available.
 
     Args:
-        parsed_data: Dictionary from VentilairsecParser.parse_packet()
+        parsed_data: Dictionary from a parser's `parse_packet()` result
         field_shortcut: Field shortcut (e.g., "MF")
-
-    Returns:
-        Enumerated string if enum mapping exists, raw value otherwise, or None
+        fields: Fields mapping returned by :func:`load_eep_fields` used for
+            enum resolution (required)
     """
+    if not parsed_data or not fields:
+        return None
+
     value = parsed_data.get(field_shortcut)
     if value is None:
         return None
 
-    metadata = VENTILAIRSEC_FIELDS.get(field_shortcut)
+    metadata = fields.get(field_shortcut)
     if metadata and "enum_map" in metadata:
         return metadata["enum_map"].get(value, value)
 
