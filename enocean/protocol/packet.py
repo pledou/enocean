@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 import enocean.utils
 from enocean.protocol import crc8
-from enocean.protocol.eep import EEP
+from enocean.protocol.eep import get_eep
 from enocean.protocol.constants import (
     PACKET,
     RORG,
@@ -21,6 +21,18 @@ from enocean.protocol.constants import (
 _CHAINED_STORAGE = {}
 
 
+class _LazyEEPProxy:
+    """Proxy that delegates attribute access to the real EEP instance.
+
+    This avoids instantiating the EEP parser (which opens EEP.xml) at
+    import time. The real EEP is created on first attribute access.
+    """
+
+    def __getattr__(self, item):
+        return getattr(get_eep(), item)
+
+
+
 class Packet(object):
     """
     Base class for Packet.
@@ -29,7 +41,7 @@ class Packet(object):
     parse_msg() returns subclass, if one is defined for the data type.
     """
 
-    eep = EEP()
+    eep = _LazyEEPProxy()
     logger = logging.getLogger("enocean.protocol.packet")
 
     def __init__(self, packet_type, data=None, optional=None):

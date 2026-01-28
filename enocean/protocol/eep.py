@@ -5,11 +5,9 @@ import logging
 from sys import version_info
 from collections import OrderedDict
 from bs4 import BeautifulSoup
+from threading import Lock
 
 import enocean.utils
-
-# Left as a helper
-from enocean.protocol.constants import RORG  # noqa: F401
 
 
 class EEP(object):
@@ -263,3 +261,30 @@ class EEP(object):
             if target.name == "status":
                 status = self._set_boolean(target, value, status)
         return data, status
+
+
+# Module-level cached instance to avoid reopening EEP.xml multiple times
+_eep_instance = None
+_eep_lock = Lock()
+
+
+def get_eep():
+    """Return a cached EEP instance (singleton).
+
+    Callers should use this instead of creating multiple ``EEP()`` objects
+    to avoid repeatedly opening and parsing the bundled EEP.xml file.
+    """
+    global _eep_instance
+    if _eep_instance is None:
+        with _eep_lock:
+            if _eep_instance is None:
+                _eep_instance = EEP()
+    return _eep_instance
+
+
+def reload_eep():
+    """Force reload the EEP XML by recreating the singleton and return it."""
+    global _eep_instance
+    with _eep_lock:
+        _eep_instance = EEP()
+        return _eep_instance

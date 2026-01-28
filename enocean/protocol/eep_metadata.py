@@ -11,7 +11,7 @@ import logging
 import os
 from typing import Any
 
-from bs4 import BeautifulSoup
+from enocean.protocol.eep import get_eep
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +59,13 @@ def load_eep_fields(
         failure to read or find matching nodes.
     """
 
-    try:
-        with open(_EEP_PATH, "r", encoding="utf-8") as xml_file:
-            soup = BeautifulSoup(xml_file.read(), "xml")
-    except OSError as err:
-        _LOGGER.warning("Unable to read EEP.xml: %s", err)
+    # Use cached EEP parser to avoid repeatedly opening/parsing EEP.xml
+    eep = get_eep()
+    if not eep or not getattr(eep, "init_ok", False):
+        _LOGGER.warning("Unable to load EEP.xml via cached EEP instance")
         return {}
+
+    soup = eep.soup
 
     # Find matching telegram(s)
     telegrams = soup.find_all("telegram", {"rorg": telegram_rorg})

@@ -15,7 +15,7 @@ import logging
 from typing import Any
 
 import enocean.utils
-from enocean.protocol.eep import EEP
+from enocean.protocol.eep import get_eep
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class Parser:
         self.rorg = rorg
         self.func = func
         self.type = type_
-        self._eep = EEP()
+        self._eep = get_eep()
 
     def parse_packet(
         self,
