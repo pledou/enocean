@@ -725,8 +725,9 @@ class ChainedPacket(RadioPacket):
         seq = (byte1 >> 4) & 0x0F
         idx = byte1 & 0x0F
 
-        # Chain length from bytes 2-3
-        data_len = (self.data[2] << 8) | self.data[3]
+        # Total length from bytes 2-3 (only valid in first frame, idx=0)
+        # In continuation frames, bytes 2-3 may contain other data
+        total_len = (self.data[2] << 8) | self.data[3] if idx == 0 else 0
 
         # Create storage key
         sender_hex = enocean.utils.to_hex_string(self.sender).replace(":", "")
@@ -738,7 +739,7 @@ class ChainedPacket(RadioPacket):
             self.rorg,
             seq,
             idx,
-            data_len,
+            total_len,
             len(self.data),
         )
 
@@ -747,7 +748,7 @@ class ChainedPacket(RadioPacket):
             self.logger.info(
                 "Chained telegram: First message (seq=%d), total_length=%d bytes",
                 seq,
-                data_len,
+                total_len,
             )
 
             # Extract first chunk of data (bytes 4 to -5, excluding sender and status)
@@ -755,7 +756,7 @@ class ChainedPacket(RadioPacket):
 
             _CHAINED_STORAGE[chain_key] = {
                 "seq": seq,
-                "total_len": data_len,
+                "total_len": total_len,
                 "data": first_data,
                 "sender": self.sender,
                 "optional": self.optional,
@@ -774,7 +775,7 @@ class ChainedPacket(RadioPacket):
             self.parsed = OrderedDict()
             self.logger.debug(
                 "ChainedPacket incomplete - not propagating to listeners (waiting for %d more bytes)",
-                data_len - len(first_data),
+                total_len - len(first_data),
             )
         else:
             # Continuation of chain
