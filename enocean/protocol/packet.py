@@ -32,7 +32,6 @@ class _LazyEEPProxy:
         return getattr(get_eep(), item)
 
 
-
 class Packet(object):
     """
     Base class for Packet.
@@ -212,7 +211,7 @@ class Packet(object):
             # Need to handle UTE Teach-in here, as it's a separate packet type...
             if data[0] == RORG.UTE:
                 packet = UTETeachInPacket(packet_type, data, opt_data)
-            elif data[0] == RORG.CHAINED:
+            elif data[0] == RORG.CHAINED or data[0] == RORG.CHAINED_VENTILAIRSEC:
                 packet = ChainedPacket(packet_type, data, opt_data)
             else:
                 packet = RadioPacket(packet_type, data, opt_data)
@@ -222,6 +221,14 @@ class Packet(object):
             packet = EventPacket(packet_type, data, opt_data)
         else:
             packet = Packet(packet_type, data, opt_data)
+
+        # Filter out incomplete CHAINED packets (parsed OrderedDict is empty)
+        # They should not be propagated until they are fully reassembled into complete MSC packets
+        if isinstance(packet, ChainedPacket) and not packet.parsed:
+            Packet.logger.debug(
+                "Suppressing incomplete CHAINED packet from propagation - waiting for reassembly"
+            )
+            return PARSE_RESULT.OK, buf, None
 
         return PARSE_RESULT.OK, buf, packet
 
@@ -494,7 +501,7 @@ class RadioPacket(Packet):
                         self._bit_data[DB2.BIT_2 : DB0.BIT_7]
                     )
                     self.logger.debug(
-                        "learn received, EEP detected, RORG: 0x%02X, FUNC: 0x%02X, TYPE: 0x%02X, Manufacturer: 0x%02X",
+                        "learn received, EEP detected, RORG: 0x%02X, FUNC: 0x%02X, TYPE: 0x%02X, Manufacturer: 0x%03X",
                         self.rorg,
                         self.rorg_func,
                         self.rorg_type,
@@ -568,6 +575,30 @@ class UTETeachInPacket(RadioPacket):
         self.rorg_of_eep = self.data[7]
         if self.teach_in:
             self.learn = True
+
+        # Enhanced debug logging for UTE packets
+        request_type_name = {
+            self.TEACH_IN: "TEACH_IN",
+            self.DELETE: "DELETE",
+            self.NOT_SPECIFIC: "NOT_SPECIFIC",
+        }.get(self.request_type, f"UNKNOWN(0x{self.request_type:02X})")
+
+        self.logger.debug(
+            "UTETeachInPacket.parse() - sender=%s, direction=%s, request_type=%s, response_expected=%s",
+            self.sender_hex,
+            "UNIDIRECTIONAL" if self.unidirectional else "BIDIRECTIONAL",
+            request_type_name,
+            self.response_expected,
+        )
+        self.logger.debug(
+            "UTE EEP info - RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X, Channel=%d",
+            self.rorg_of_eep,
+            self.rorg_func,
+            self.rorg_type,
+            self.rorg_manufacturer,
+            self.channel,
+        )
+
         return self.parsed
 
     def create_response_packet(self, sender_id, response=None):
@@ -625,6 +656,26 @@ class ResponsePacket(Packet):
         """
         self.response = self.data[0]
         self.response_data = self.data[1:]
+
+        # Enhanced debug logging for response packets
+        response_names = {
+            0x00: "OK",
+            0x01: "ERROR",
+            0x02: "NOT_SUPPORTED",
+            0x03: "WRONG_PARAM",
+            0x04: "OPERATION_DENIED",
+        }
+        response_name = response_names.get(
+            self.response, f"UNKNOWN(0x{self.response:02X})"
+        )
+
+        self.logger.debug(
+            "ResponsePacket.parse() - response=0x%02X (%s), data=%s",
+            self.response,
+            response_name,
+            [hex(b) for b in self.response_data[: min(len(self.response_data), 8)]],
+        )
+
         return super(ResponsePacket, self).parse()
 
 
@@ -646,11 +697,12 @@ class EventPacket(Packet):
 
 
 class ChainedPacket(RadioPacket):
-    """Handles CHAINED telegrams (RORG 0xC8) for multi-part messages.
+    """Handles CHAINED telegrams (RORG 0xC8 or 0x40) for multi-part messages.
 
-    Ventilairsec MSC devices use chained telegrams to send long messages
-    that don't fit in a single EnOcean frame. This class reconstructs
-    the complete message from multiple chained frames.
+    Ventilairsec MSC devices use chained telegrams (proprietary 0x40) to send long
+    messages that don't fit in a single EnOcean frame. Standard EnOcean also uses
+    0xC8 for chained messages. This class reconstructs the complete message from
+    multiple chained frames for both formats.
     """
 
     def parse(self):
@@ -681,13 +733,21 @@ class ChainedPacket(RadioPacket):
         chain_key = f"{sender_hex}.{seq}"
 
         self.logger.debug(
-            "Chained telegram: seq=%d, idx=%d, total_len=%d", seq, idx, data_len
+            "ChainedPacket.parse() - sender=%s, RORG=0x%02X, seq=%d, idx=%d, total_len=%d, data_len=%d",
+            sender_hex,
+            self.rorg,
+            seq,
+            idx,
+            data_len,
+            len(self.data),
         )
 
         if idx == 0:
             # First message of chain - store metadata
-            self.logger.debug(
-                "First chained message (seq=%d), total_length=%d", seq, data_len
+            self.logger.info(
+                "Chained telegram: First message (seq=%d), total_length=%d bytes",
+                seq,
+                data_len,
             )
 
             # Extract first chunk of data (bytes 4 to -5, excluding sender and status)
@@ -702,16 +762,33 @@ class ChainedPacket(RadioPacket):
             }
 
             self.logger.debug(
-                "Stored first chunk, key=%s, data_len=%d", chain_key, len(first_data)
+                "Stored first chunk: key=%s, stored_len=%d, first_data=%s",
+                chain_key,
+                len(first_data),
+                bytes(first_data).hex(),
+            )
+
+            # Mark as unparsed since this is an incomplete chain
+            # Keep as OrderedDict (empty) to indicate incompleteness
+            # The parsed OrderedDict is only populated when reassembly is complete
+            self.parsed = OrderedDict()
+            self.logger.debug(
+                "ChainedPacket incomplete - not propagating to listeners (waiting for %d more bytes)",
+                data_len - len(first_data),
             )
         else:
             # Continuation of chain
-            self.logger.debug("Chained continuation (seq=%d, idx=%d)", seq, idx)
+            self.logger.debug(
+                "Chained telegram: Continuation (seq=%d, idx=%d)", seq, idx
+            )
 
             if chain_key not in _CHAINED_STORAGE:
                 self.logger.warning(
-                    "Chained continuation without first message: %s", chain_key
+                    "Chained continuation without first message (chain_key=%s). Available keys: %s",
+                    chain_key,
+                    list(_CHAINED_STORAGE.keys()),
                 )
+                self.parsed = False
                 return self.parsed
 
             # Extract continuation data (bytes 4 to -5)
@@ -722,12 +799,24 @@ class ChainedPacket(RadioPacket):
             current_len = len(_CHAINED_STORAGE[chain_key]["data"])
             expected_len = _CHAINED_STORAGE[chain_key]["total_len"]
 
-            self.logger.debug("Chain progress: %d/%d bytes", current_len, expected_len)
+            self.logger.debug(
+                "Chained progress (seq=%d, idx=%d): %d/%d bytes, new_chunk=%s",
+                seq,
+                idx,
+                current_len,
+                expected_len,
+                bytes(cont_data).hex(),
+            )
+
+            # Mark as unparsed - will only be parsed when complete
+            # Keep as OrderedDict (empty) to indicate incompleteness
+            self.parsed = OrderedDict()
 
             # Check if chain is complete
             if current_len >= expected_len:
                 self.logger.debug(
-                    "Chain complete for %s, reassembling MSC packet", chain_key
+                    "Chained telegram complete: Reassembling MSC packet from %d bytes",
+                    expected_len,
                 )
 
                 # Get complete data and truncate to expected length
@@ -752,6 +841,10 @@ class ChainedPacket(RadioPacket):
                 # Parse the MSC packet
                 msc_packet.parse()
 
+                # Mark the reassembled packet as fully parsed and complete
+                # This allows it to be propagated to listeners
+                msc_packet.parsed = True
+
                 # Copy the reassembled packet attributes to self
                 self.data = msc_packet.data
                 self.optional = msc_packet.optional
@@ -764,9 +857,11 @@ class ChainedPacket(RadioPacket):
                 self.parsed = msc_packet.parsed
 
                 self.logger.debug(
-                    "MSC packet reconstructed: RORG=0x%02X, len=%d, parsed=%s",
+                    "MSC packet reconstructed successfully: RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X, parsed=%s",
                     self.rorg,
-                    len(self.data),
+                    self.rorg_func if self.rorg_func is not None else 0,
+                    self.rorg_type if self.rorg_type is not None else 0,
+                    self.rorg_manufacturer if self.rorg_manufacturer is not None else 0,
                     self.parsed,
                 )
 

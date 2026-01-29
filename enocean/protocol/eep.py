@@ -55,12 +55,12 @@ class EEP(object):
         """Get raw data as integer, based on offset and size"""
         offset = int(source["offset"])
         size = int(source["size"])
-        return int(
-            "".join(
-                ["1" if digit else "0" for digit in bitarray[offset : offset + size]]
-            ),
-            2,
+        bit_string = "".join(
+            ["1" if digit else "0" for digit in bitarray[offset : offset + size]]
         )
+        if not bit_string:
+            return 0
+        return int(bit_string, 2)
 
     @staticmethod
     def _set_raw(target, raw_value, bitarray):
@@ -108,15 +108,37 @@ class EEP(object):
         raw_value = self._get_raw(source, bitarray)
 
         # Find value description.
-        value_desc = source.find(
-            "item", {"value": str(raw_value)}
-        ) or self._get_rangeitem(source, raw_value)
+        value_desc = source.find("item", {"value": str(raw_value)})
+        if value_desc is None:
+            value_desc = self._get_rangeitem(source, raw_value)
+
+        # If no explicit item or rangeitem matches, fall back to the
+        # raw numeric value rather than raising when indexing None.
+        if value_desc is None:
+            value_text = str(raw_value)
+        else:
+            # Prefer a "description" attribute, fall back to tag text.
+            value_text = (
+                value_desc.get("description")
+                if value_desc.get("description") is not None
+                else (
+                    value_desc.text
+                    if getattr(value_desc, "text", None)
+                    else str(raw_value)
+                )
+            )
+            # Try formatting if description contains placeholders
+            try:
+                value_text = value_text.format(value=raw_value)
+            except (ValueError, TypeError, KeyError):
+                # If formatting fails, keep the raw text
+                value_text = str(value_text)
 
         return {
             source["shortcut"]: {
                 "description": source.get("description"),
                 "unit": source.get("unit", ""),
-                "value": value_desc["description"].format(value=raw_value),
+                "value": value_text,
                 "raw_value": raw_value,
             }
         }

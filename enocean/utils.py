@@ -24,6 +24,8 @@ def to_bitarray(data, width=8):
 
 def from_bitarray(data):
     """Convert bit array back to integer"""
+    if not data:
+        return 0
     return int("".join(["1" if x else "0" for x in data]), 2)
 
 

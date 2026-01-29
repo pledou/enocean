@@ -61,6 +61,7 @@ class RORG(IntEnum):
     SEC_ENCAPS = 0x31
     UTE = 0xD4
     CHAINED = 0xC8
+    CHAINED_VENTILAIRSEC = 0x40  # Proprietary Ventilairsec CHAINED implementation
 
 
 # Results for message parsing
