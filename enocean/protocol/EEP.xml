@@ -1869,8 +1869,6 @@
         </data>
       </profile>
     </profiles>
-  </telegram>
-  <telegram rorg="0xD1079" type="MSC" description="MSC Telegram Ventilairsec">
     <profiles func="0x01" description="0x01">
       <profile type="0x00" description="0x00">
         <command description="command indentifier" shortcut="CMD" offset="4" size="4">
