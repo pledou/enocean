@@ -861,12 +861,6 @@ class ChainedPacket(RadioPacket):
                 msc_packet = RadioPacket(
                     self.packet_type, msc_data, _CHAINED_STORAGE[key]["optional"]
                 )
-                try:
-                    self.logger.debug(
-                        "Reassembled MSC packet raw=%s", bytes(msc_data).hex()
-                    )
-                except (TypeError, ValueError, AttributeError):
-                    self.logger.debug("Reassembled MSC packet (unable to hex-print)")
 
                 del _CHAINED_STORAGE[key]
                 msc_packet.parse()
