@@ -85,15 +85,20 @@ class Communicator(threading.Thread):
                         self.send(response_packet)
 
                 # Always put RESPONSE packets in the queue for base_id retrieval
-                # even when callback is set
+                # even when callback is set. Avoid enqueueing RESPONSES twice
+                # when no callback is configured.
                 if packet.packet_type == PACKET.RESPONSE:
                     self.receive.put(packet)
-
-                # Route packet based on callback setting
-                if self.__callback is None:
-                    self.receive.put(packet)
+                    # If a callback is configured, call it; otherwise the
+                    # packet has already been enqueued for consumers.
+                    if self.__callback is not None:
+                        self.__callback(packet)
                 else:
-                    self.__callback(packet)
+                    # Non-response packets follow normal routing
+                    if self.__callback is None:
+                        self.receive.put(packet)
+                    else:
+                        self.__callback(packet)
                 self.logger.debug(packet)
 
     @property

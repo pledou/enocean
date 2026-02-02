@@ -64,11 +64,40 @@ class Parser:
             )
             return None
 
+        # For MSC packets (rorg 0xD1xxx), EEP.xml offsets assume bit 0 starts at RORG byte
+        # For example, Ventilairsec 0xD1079 has CMD at offset 12 bits = byte 1, bits 4-7
+        # which means it expects the RORG byte (0xD1) to be included in the bit array
+        adjusted_start_idx = data_start_idx
+        if self.rorg >= 0xD1000:  # MSC with manufacturer code (e.g., 0xD1079)
+            adjusted_start_idx = 0
         try:
-            return self._parse_from_eep(data, data_start_idx, status_idx, command)
+            return self._parse_from_eep(data, adjusted_start_idx, status_idx, command)
 
         except (ValueError, TypeError) as err:
-            _LOGGER.error("Error parsing EEP packet: %s", err)
+            # Provide richer debugging context to help diagnose malformed packets
+            # (for example when the packet contains strings instead of ints)
+            try:
+                data_hex = data.hex() if isinstance(data, (bytes, bytearray)) else None
+            except (AttributeError, TypeError, ValueError):
+                data_hex = None
+
+            try:
+                byte_values = list(data)
+            except TypeError:
+                byte_values = repr(data)
+
+            _LOGGER.error(
+                "Error parsing EEP packet: %s; context: RORG=0x%02X FUNC=0x%02X TYPE=0x%02X CMD=%s data=%s data_hex=%s byte_values=%s",
+                err,
+                self.rorg,
+                self.func,
+                self.type,
+                command,
+                repr(data),
+                data_hex,
+                repr(byte_values),
+                exc_info=True,
+            )
             return None
 
     def _parse_from_eep(
@@ -134,6 +163,23 @@ class Parser:
                 parsed[shortcut] = payload["raw_value"]
             else:
                 parsed[shortcut] = payload
+
+        # If a specific command was requested, verify that values belong to that command
+        # by checking the profile's command attribute matches
+        if (
+            command is not None
+            and hasattr(profile, "get")
+            and profile.get("command") is not None
+        ):
+            profile_command = profile.get("command")
+            if str(profile_command) != str(command):
+                _LOGGER.debug(
+                    "Profile command mismatch: requested CMD=%s but profile is CMD=%s",
+                    command,
+                    profile_command,
+                )
+                # Return only the CMD field when command mismatch
+                return parsed
 
         return parsed
 

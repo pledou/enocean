@@ -340,8 +340,20 @@ class Packet(object):
         # set EEP profile
         self.rorg_func = rorg_func
         self.rorg_type = rorg_type
+
+        # For MSC Ventilairsec, EEP.xml uses rorg="0xD1079" which is
+        # the concatenation of RORG byte (0xD1) + manufacturer ID (0x079)
+        # We need to construct this value: (0xD1 << 12) | manufacturer_bits
+        eep_rorg = self.rorg
+        if self.rorg == RORG.MSC and hasattr(self, "rorg_manufacturer"):
+            # Construct full rorg value for Ventilairsec: 0xD1079 = (0xD1 << 12) | 0x079
+            # rorg_manufacturer contains bits 0-12, where bits 0-8 are the RORG byte
+            # We need to combine RORG byte with the next bits to match EEP.xml
+            manufacturer_bits = self.rorg_manufacturer & 0xFFF  # Keep only 12 bits
+            eep_rorg = (self.rorg << 12) | manufacturer_bits
+
         self._profile = self.eep.find_profile(
-            self._bit_data, self.rorg, rorg_func, rorg_type, direction, command
+            self._bit_data, eep_rorg, rorg_func, rorg_type, direction, command
         )
         return self._profile is not None
 
@@ -467,6 +479,11 @@ class RadioPacket(Packet):
         self.learn = True
 
         self.rorg = self.data[0]
+        self.cmd = None
+
+        if self.rorg == RORG.VLD and len(self.data) > 1:
+            # Common VLD command is in bits 4-7 of the first data byte (offset 0 in data portion)
+            self.cmd = enocean.utils.from_bitarray(self._bit_data[8:12])
 
         if self.rorg == RORG.MSC:
             # MSC telegram: extract manufacturer and command bits
@@ -565,6 +582,7 @@ class UTETeachInPacket(RadioPacket):
         self.request_type = enocean.utils.from_bitarray(
             self._bit_data[DB6.BIT_5 : DB6.BIT_3]
         )
+        self.cmd = self.request_type
         self.rorg_manufacturer = enocean.utils.from_bitarray(
             self._bit_data[DB3.BIT_2 : DB2.BIT_7]
             + self._bit_data[DB4.BIT_7 : DB3.BIT_7]
@@ -715,6 +733,169 @@ class ChainedPacket(RadioPacket):
 
         self.rorg = self.data[0]
 
+        # Ventilairsec proprietary CHAINED (0x40) uses an alternate
+        # framing where continuation payload bytes start at index 2 and
+        # the total length is encoded as concatenated decimal strings
+        # in bytes 2..3 of the first frame. Use the user-supplied
+        # reassembly algorithm for RORG 0x40.
+        if self.rorg == RORG.CHAINED_VENTILAIRSEC:
+            # Use same bit mapping as standard CHAINED packets:
+            # Bits 4-7: sequence, Bits 0-3: index
+            byte1 = self.data[1]
+            seq = (byte1 >> 4) & 0x0F
+            idx = byte1 & 0x0F
+
+            sender_hex = enocean.utils.to_hex_string(self.sender).replace(":", "")
+            key = f"{sender_hex}.{seq}"
+
+            self.logger.debug(
+                "ChainedPacket.parse() - sender=%s, RORG=0x%02X, seq=%d, idx=%d, data_len=%d",
+                sender_hex,
+                self.rorg,
+                seq,
+                idx,
+                len(self.data),
+            )
+
+            if idx == 0:
+                # First frame: total length is stored in bytes 2-3 as
+                # concatenated decimal strings (e.g., 0x00 0x11 = "0" + "17" = "017" = 17)
+                lendata = int(str(self.data[2]) + str(self.data[3]))
+
+                self.logger.info(
+                    "Chained telegram: First message (seq=%d), total_length=%d bytes",
+                    seq,
+                    lendata,
+                )
+
+                first_data = self.data[4:-5]
+                _CHAINED_STORAGE[key] = {
+                    "seq": seq,
+                    "total_len": lendata,
+                    "data": list(first_data),
+                    "sender": self.sender,
+                    "optional": self.optional,
+                }
+
+                self.logger.debug(
+                    "Stored first chunk: key=%s, stored_len=%d, first_data=%s",
+                    key,
+                    len(first_data),
+                    bytes(first_data).hex(),
+                )
+
+                # log raw
+                try:
+                    self.logger.debug(
+                        "Chained first frame raw data=%s optional=%s",
+                        bytes(self.data).hex(),
+                        bytes(self.optional).hex(),
+                    )
+                except (TypeError, ValueError, AttributeError):
+                    self.logger.debug("Chained first frame (unable to hex-print data)")
+
+                self.parsed = OrderedDict()
+                return self.parsed
+
+            # continuation
+            self.logger.debug(
+                "Chained telegram: Continuation (seq=%d, idx=%d)", seq, idx
+            )
+
+            try:
+                self.logger.debug(
+                    "Chained continuation raw data=%s optional=%s",
+                    bytes(self.data).hex(),
+                    bytes(self.optional).hex(),
+                )
+            except (TypeError, ValueError, AttributeError) as err:
+                self.logger.debug(
+                    "Chained continuation (unable to hex-print data): error %s", err
+                )
+
+            if key not in _CHAINED_STORAGE:
+                self.logger.debug(
+                    "No chain found for %s (missing first frame)",
+                    key,
+                )
+                return self.parsed
+
+            # For VENTILAIRSEC continuation frames, payload starts at index 2
+            # (bytes 2-3 are part of the payload, unlike in the first frame
+            # where they encode the total length)
+            cont_data = self.data[2:-5]
+            _CHAINED_STORAGE[key]["data"].extend(cont_data)
+
+            try:
+                self.logger.debug(
+                    "Chained stored data for %s: %s",
+                    key,
+                    bytes(_CHAINED_STORAGE[key]["data"]).hex(),
+                )
+            except (TypeError, ValueError, AttributeError) as err:
+                self.logger.debug(
+                    "Chained stored data (unable to hex-print). Error: %s", err
+                )
+
+            current_len = len(_CHAINED_STORAGE[key]["data"])
+            expected_len = _CHAINED_STORAGE[key]["total_len"]
+
+            self.logger.debug(
+                "Chained progress (seq=%d, idx=%d): %d/%d bytes, new_chunk=%s",
+                seq,
+                idx,
+                current_len,
+                expected_len,
+                bytes(cont_data).hex(),
+            )
+
+            self.parsed = OrderedDict()
+
+            if current_len >= expected_len:
+                complete_data = _CHAINED_STORAGE[key]["data"][:expected_len]
+
+                # Reassemble as MSC packet: [RORG] + complete_data + sender + status
+                msc_data = (
+                    [0xD1] + complete_data + _CHAINED_STORAGE[key]["sender"] + [0]
+                )
+                msc_packet = RadioPacket(
+                    self.packet_type, msc_data, _CHAINED_STORAGE[key]["optional"]
+                )
+                try:
+                    self.logger.debug(
+                        "Reassembled MSC packet raw=%s", bytes(msc_data).hex()
+                    )
+                except (TypeError, ValueError, AttributeError):
+                    self.logger.debug("Reassembled MSC packet (unable to hex-print)")
+
+                del _CHAINED_STORAGE[key]
+                msc_packet.parse()
+
+                self.data = msc_packet.data
+                self.optional = msc_packet.optional
+                self.rorg = msc_packet.rorg
+                self.rorg_func = msc_packet.rorg_func
+                self.rorg_type = msc_packet.rorg_type
+                self.rorg_manufacturer = msc_packet.rorg_manufacturer
+                self.contains_eep = msc_packet.contains_eep
+                self.learn = msc_packet.learn
+                self.cmd = msc_packet.cmd
+                self.parsed = msc_packet.parsed
+
+                # Ensure parsed is truthy so parse_msg doesn't suppress
+                # the reassembled packet.
+                if not self.parsed:
+                    self.parsed["reconstructed"] = {"raw_value": True}
+
+                self.logger.debug(
+                    "MSC packet reconstructed successfully: RORG=0x%02X, parsed=%s",
+                    self.rorg,
+                    self.parsed,
+                )
+                return self.parsed
+
+            return self.parsed
+
         if len(self.data) < 8:
             self.logger.error("Chained packet too short: %d bytes", len(self.data))
             return self.parsed
@@ -789,11 +970,10 @@ class ChainedPacket(RadioPacket):
                     chain_key,
                     list(_CHAINED_STORAGE.keys()),
                 )
-                self.parsed = False
                 return self.parsed
 
-            # Extract continuation data (bytes 4 to -5)
-            cont_data = self.data[4:-5]
+            # Extract continuation data (bytes 2 to -5, including bytes 2-3 which are payload)
+            cont_data = self.data[2:-5]
 
             _CHAINED_STORAGE[chain_key]["data"].extend(cont_data)
 
@@ -842,10 +1022,6 @@ class ChainedPacket(RadioPacket):
                 # Parse the MSC packet
                 msc_packet.parse()
 
-                # Mark the reassembled packet as fully parsed and complete
-                # This allows it to be propagated to listeners
-                msc_packet.parsed = True
-
                 # Copy the reassembled packet attributes to self
                 self.data = msc_packet.data
                 self.optional = msc_packet.optional
@@ -855,7 +1031,13 @@ class ChainedPacket(RadioPacket):
                 self.rorg_manufacturer = msc_packet.rorg_manufacturer
                 self.contains_eep = msc_packet.contains_eep
                 self.learn = msc_packet.learn
+                self.cmd = msc_packet.cmd
                 self.parsed = msc_packet.parsed
+
+                # Ensure parsed is truthy so parse_msg doesn't suppress
+                # the reassembled packet.
+                if not self.parsed:
+                    self.parsed["reconstructed"] = {"raw_value": True}
 
                 self.logger.debug(
                     "MSC packet reconstructed successfully: RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X, parsed=%s",
