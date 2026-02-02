@@ -353,7 +353,7 @@ class TestChainedPacketOrdering:
         _CHAINED_STORAGE.clear()
 
         # Skip first chunk, send continuation directly
-        # This should fail gracefully
+        # This should fail gracefully and be suppressed
         data = [
             0x40,
             0x41,
@@ -376,7 +376,7 @@ class TestChainedPacketOrdering:
         frame = _make_frame(data, opt_data)
         result, _, packet = Packet.parse_msg(frame)
 
-        # Should still return OK but packet should be None (no first chunk to attach to)
+        # Should return OK but packet should be None (no first chunk to attach to)
         assert result == PARSE_RESULT.OK
         assert packet is None
 

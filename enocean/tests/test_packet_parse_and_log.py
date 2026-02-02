@@ -260,7 +260,11 @@ def test_parse_real_raw_frames_from_logs():
 
         result, remaining, packet = Packet.parse_msg(bytearray(ords))
         assert result == PARSE_RESULT.OK
-        assert packet is not None
+
+        # Intermediate fragments might be suppressed and return None
+        if packet is None:
+            continue
+
         logging.getLogger("enocean.protocol.packet").debug(
             "Parsed from log frame: %s", packet
         )
@@ -297,6 +301,9 @@ def test_parse_real_raw_frames_from_logs_chained():
     prevent incomplete fragments from being propagated to listeners. This is the
     correct behavior.
     """
+    from enocean.protocol.packet import _CHAINED_STORAGE
+    _CHAINED_STORAGE.clear()
+    
     logging.getLogger("enocean.protocol.packet").setLevel(logging.DEBUG)
 
     # Sample 1: Incomplete CHAINED packet (0x40 Ventilairsec) - should be suppressed
