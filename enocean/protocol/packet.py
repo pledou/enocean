@@ -225,7 +225,7 @@ class Packet(object):
         # Filter out incomplete CHAINED packets (parsed OrderedDict is empty)
         # They should not be propagated until they are fully reassembled into complete MSC packets
         if isinstance(packet, ChainedPacket) and not packet.parsed:
-            Packet.logger.debug(
+            Packet.logger.info(
                 "Suppressing incomplete CHAINED packet from propagation - waiting for reassembly"
             )
             return PARSE_RESULT.OK, buf, None
@@ -748,15 +748,6 @@ class ChainedPacket(RadioPacket):
             sender_hex = enocean.utils.to_hex_string(self.sender).replace(":", "")
             key = f"{sender_hex}.{seq}"
 
-            self.logger.debug(
-                "ChainedPacket.parse() - sender=%s, RORG=0x%02X, seq=%d, idx=%d, data_len=%d",
-                sender_hex,
-                self.rorg,
-                seq,
-                idx,
-                len(self.data),
-            )
-
             if idx == 0:
                 # First frame: total length is stored in bytes 2-3 as
                 # concatenated decimal strings (e.g., 0x00 0x11 = "0" + "17" = "017" = 17)
@@ -777,23 +768,6 @@ class ChainedPacket(RadioPacket):
                     "optional": self.optional,
                 }
 
-                self.logger.debug(
-                    "Stored first chunk: key=%s, stored_len=%d, first_data=%s",
-                    key,
-                    len(first_data),
-                    bytes(first_data).hex(),
-                )
-
-                # log raw
-                try:
-                    self.logger.debug(
-                        "Chained first frame raw data=%s optional=%s",
-                        bytes(self.data).hex(),
-                        bytes(self.optional).hex(),
-                    )
-                except (TypeError, ValueError, AttributeError):
-                    self.logger.debug("Chained first frame (unable to hex-print data)")
-
                 self.parsed = OrderedDict()
                 return self.parsed
 
@@ -801,17 +775,6 @@ class ChainedPacket(RadioPacket):
             self.logger.debug(
                 "Chained telegram: Continuation (seq=%d, idx=%d)", seq, idx
             )
-
-            try:
-                self.logger.debug(
-                    "Chained continuation raw data=%s optional=%s",
-                    bytes(self.data).hex(),
-                    bytes(self.optional).hex(),
-                )
-            except (TypeError, ValueError, AttributeError) as err:
-                self.logger.debug(
-                    "Chained continuation (unable to hex-print data): error %s", err
-                )
 
             if key not in _CHAINED_STORAGE:
                 self.logger.debug(
@@ -825,17 +788,6 @@ class ChainedPacket(RadioPacket):
             # where they encode the total length)
             cont_data = self.data[2:-5]
             _CHAINED_STORAGE[key]["data"].extend(cont_data)
-
-            try:
-                self.logger.debug(
-                    "Chained stored data for %s: %s",
-                    key,
-                    bytes(_CHAINED_STORAGE[key]["data"]).hex(),
-                )
-            except (TypeError, ValueError, AttributeError) as err:
-                self.logger.debug(
-                    "Chained stored data (unable to hex-print). Error: %s", err
-                )
 
             current_len = len(_CHAINED_STORAGE[key]["data"])
             expected_len = _CHAINED_STORAGE[key]["total_len"]
@@ -881,11 +833,6 @@ class ChainedPacket(RadioPacket):
                 if not self.parsed:
                     self.parsed["reconstructed"] = {"raw_value": True}
 
-                self.logger.debug(
-                    "MSC packet reconstructed successfully: RORG=0x%02X, parsed=%s",
-                    self.rorg,
-                    self.parsed,
-                )
                 return self.parsed
 
             return self.parsed
@@ -936,13 +883,6 @@ class ChainedPacket(RadioPacket):
                 "sender": self.sender,
                 "optional": self.optional,
             }
-
-            self.logger.debug(
-                "Stored first chunk: key=%s, stored_len=%d, first_data=%s",
-                chain_key,
-                len(first_data),
-                bytes(first_data).hex(),
-            )
 
             # Mark as unparsed since this is an incomplete chain
             # Keep as OrderedDict (empty) to indicate incompleteness
@@ -1033,13 +973,12 @@ class ChainedPacket(RadioPacket):
                 if not self.parsed:
                     self.parsed["reconstructed"] = {"raw_value": True}
 
-                self.logger.debug(
-                    "MSC packet reconstructed successfully: RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X, parsed=%s",
+                self.logger.info(
+                    "MSC packet reconstructed successfully: RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X",
                     self.rorg,
                     self.rorg_func if self.rorg_func is not None else 0,
                     self.rorg_type if self.rorg_type is not None else 0,
                     self.rorg_manufacturer if self.rorg_manufacturer is not None else 0,
-                    self.parsed,
                 )
 
         return self.parsed
