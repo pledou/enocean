@@ -225,9 +225,6 @@ class Packet(object):
         # Filter out incomplete CHAINED packets (parsed OrderedDict is empty)
         # They should not be propagated until they are fully reassembled into complete MSC packets
         if isinstance(packet, ChainedPacket) and not packet.parsed:
-            Packet.logger.info(
-                "Suppressing incomplete CHAINED packet from propagation - waiting for reassembly"
-            )
             return PARSE_RESULT.OK, buf, None
 
         return PARSE_RESULT.OK, buf, packet
