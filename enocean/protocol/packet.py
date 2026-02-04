@@ -806,10 +806,9 @@ class ChainedPacket(RadioPacket):
             if current_len >= expected_len:
                 complete_data = _CHAINED_STORAGE[key]["data"][:expected_len]
 
-                # Reassemble as MSC packet: [RORG] + complete_data + sender + status
-                msc_data = (
-                    [0xD1] + complete_data + _CHAINED_STORAGE[key]["sender"] + [0]
-                )
+                # Reassemble as MSC packet: complete_data already contains RORG byte (0xD1)
+                # Ventilairsec chained telegrams include the full MSC structure
+                msc_data = complete_data + _CHAINED_STORAGE[key]["sender"] + [0]
                 msc_packet = RadioPacket(
                     self.packet_type, msc_data, _CHAINED_STORAGE[key]["optional"]
                 )
