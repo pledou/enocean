@@ -828,10 +828,24 @@ class ChainedPacket(RadioPacket):
                 self.cmd = msc_packet.cmd
                 self.parsed = msc_packet.parsed
 
-                # Ensure parsed is truthy so parse_msg doesn't suppress
-                # the reassembled packet.
+                # Mark as reconstructed so downstream processing knows this was reassembled
+                # Store reconstruction info that will help with later parsing attempts
                 if not self.parsed:
-                    self.parsed["reconstructed"] = {"raw_value": True}
+                    # MSC packets don't auto-parse EEP (contains_eep=False)
+                    # Mark as reconstructed so dongle can attempt profile-based parsing
+                    self.parsed["reconstructed"] = {
+                        "raw_value": True,
+                        "rorg_manufacturer": self.rorg_manufacturer,
+                        "cmd": self.cmd,
+                    }
+
+                self.logger.debug(
+                    "Reconstructed MSC packet: rorg=0x%02X manufacturer=0x%03X cmd=%s parsed=%s",
+                    self.rorg,
+                    self.rorg_manufacturer if self.rorg_manufacturer else 0,
+                    self.cmd,
+                    bool(self.parsed),
+                )
 
                 return self.parsed
 
@@ -968,10 +982,16 @@ class ChainedPacket(RadioPacket):
                 self.cmd = msc_packet.cmd
                 self.parsed = msc_packet.parsed
 
-                # Ensure parsed is truthy so parse_msg doesn't suppress
-                # the reassembled packet.
+                # Mark as reconstructed so downstream processing knows this was reassembled
+                # Store reconstruction info that will help with later parsing attempts
                 if not self.parsed:
-                    self.parsed["reconstructed"] = {"raw_value": True}
+                    # MSC packets don't auto-parse EEP (contains_eep=False)
+                    # Mark as reconstructed so dongle can attempt profile-based parsing
+                    self.parsed["reconstructed"] = {
+                        "raw_value": True,
+                        "rorg_manufacturer": self.rorg_manufacturer,
+                        "cmd": self.cmd,
+                    }
 
                 self.logger.info(
                     "MSC packet reconstructed successfully: RORG=0x%02X, FUNC=0x%02X, TYPE=0x%02X, Manufacturer=0x%03X",
