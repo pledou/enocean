@@ -1803,15 +1803,16 @@
           <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Batterie" shortcut="Batt" offset="24" size="8">
-            <item description="Off" value="0" />
-            <item description="Level 0" value="1" />
-            <item description="Level 1" value="2" />
-            <item description="Level 2" value="3" />
-            <item description="Level 3" value="4" />
-            <item description="Level 4" value="5" />
-            <item description="Level 5" value="6" />
-          </enum>
+          <value description="Batterie" shortcut="Batt" offset="24" size="8">
+            <range>
+              <min>0</min>
+              <max>6</max>
+            </range>
+            <scale>
+              <min>0</min>
+              <max>100</max>
+            </scale>
+          </value>
           <value description="Temperature" shortcut="TEMP" offset="32" size="16" unit="">
             <range>
               <min>0</min>
@@ -1837,15 +1838,16 @@
           <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Batterie" shortcut="Batt" offset="24" size="8">
-            <item description="Off" value="0" />
-            <item description="Level 0" value="1" />
-            <item description="Level 1" value="2" />
-            <item description="Level 2" value="3" />
-            <item description="Level 3" value="4" />
-            <item description="Level 4" value="5" />
-            <item description="Level 5" value="6" />
-          </enum>
+          <value description="Batterie" shortcut="Batt" offset="24" size="8">
+            <range>
+              <min>0</min>
+              <max>6</max>
+            </range>
+            <scale>
+              <min>0</min>
+              <max>100</max>
+            </scale>
+          </value>
           <value description="Temperature" shortcut="TEMP" offset="32" size="16" unit="">
             <range>
               <min>0</min>
