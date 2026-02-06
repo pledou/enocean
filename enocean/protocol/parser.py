@@ -161,6 +161,10 @@ class Parser:
             parsed["CMD"] = command
 
         for shortcut, payload in values.items():
+            # Skip CMD field from EEP data when command parameter is provided
+            # The command parameter (from packet.cmd) is the authoritative source
+            if command is not None and shortcut == "CMD":
+                continue
             # Use raw_value to keep compatibility with enum mapping
             if isinstance(payload, dict) and "raw_value" in payload:
                 parsed[shortcut] = payload["raw_value"]
