@@ -4,9 +4,15 @@ This module provides a generic parsing functionality for any EnOcean EEP profile
 using RORG, FUNC, and TYPE identifiers. It dynamically loads profile definitions
 from EEP.xml and parses incoming telegrams accordingly.
 
+The parser automatically applies scaling to numeric fields based on their range
+and scale definitions in EEP.xml. For enum fields, it returns the raw integer
+value rather than the text description.
+
 Example usage:
     parser = Parser(rorg=0xD1, func=0x07, type_=0x09)
     parsed_data = parser.parse_packet(data, command=command_id)
+    # Returns: {'CMD': 1, 'TEMP': 18.28, 'HUM': 63.0, 'Batt': 6}
+    # Note: TEMP is scaled from raw value 5828 to 18.28°C
 """
 
 from __future__ import annotations
@@ -165,9 +171,23 @@ class Parser:
             # The command parameter (from packet.cmd) is the authoritative source
             if command is not None and shortcut == "CMD":
                 continue
-            # Use raw_value to keep compatibility with enum mapping
-            if isinstance(payload, dict) and "raw_value" in payload:
-                parsed[shortcut] = payload["raw_value"]
+            # Determine which value to use based on payload structure:
+            # - For numeric fields with scaling: use scaled "value"
+            # - For enums: use numeric "raw_value" (not the text description)
+            if isinstance(payload, dict):
+                if "value" in payload and "raw_value" in payload:
+                    # Check if value is numeric (scaled field) or string (enum description)
+                    if isinstance(payload["value"], (int, float)):
+                        # Numeric field with scaling - use scaled value
+                        parsed[shortcut] = payload["value"]
+                    else:
+                        # Enum field - use raw integer value, not description
+                        parsed[shortcut] = payload["raw_value"]
+                elif "raw_value" in payload:
+                    # Only raw_value present
+                    parsed[shortcut] = payload["raw_value"]
+                else:
+                    parsed[shortcut] = payload
             else:
                 parsed[shortcut] = payload
 
