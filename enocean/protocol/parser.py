@@ -147,6 +147,9 @@ class Parser:
                 self.type,
                 f" CMD={command}" if command is not None else "",
             )
+            # If we have a command but no matching data definition, return just the command
+            if command is not None:
+                return {"CMD": command}
             return None
 
         _, values = self._eep.get_values(profile, bit_data, bit_status)

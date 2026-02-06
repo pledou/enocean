@@ -1837,7 +1837,7 @@
           <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Batterie" shortcut="BATT" offset="16" size="8">
+          <enum description="Batterie" shortcut="Batt" offset="16" size="8">
             <item description="Off" value="0" />
             <item description="Level 0" value="1" />
             <item description="Level 1" value="2" />
