@@ -94,7 +94,7 @@ class EEP(object):
         return {
             source["shortcut"]: {
                 "description": source.get("description"),
-                "unit": source["unit"],
+                "unit": source.get("unit", None),
                 "value": (scl_max - scl_min)
                 / (rng_max - rng_min)
                 * (raw_value - rng_min)
