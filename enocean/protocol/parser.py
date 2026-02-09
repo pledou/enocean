@@ -171,23 +171,11 @@ class Parser:
             # The command parameter (from packet.cmd) is the authoritative source
             if command is not None and shortcut == "CMD":
                 continue
-            # Determine which value to use based on payload structure:
-            # - For numeric fields with scaling: use scaled "value"
-            # - For enums: use numeric "raw_value" (not the text description)
+            # Preserve the full payload dict to retain out_of_range flags and other metadata
+            # The entity validation code depends on these flags to detect invalid packets
             if isinstance(payload, dict):
-                if "value" in payload and "raw_value" in payload:
-                    # Check if value is numeric (scaled field) or string (enum description)
-                    if isinstance(payload["value"], (int, float)):
-                        # Numeric field with scaling - use scaled value
-                        parsed[shortcut] = payload["value"]
-                    else:
-                        # Enum field - use raw integer value, not description
-                        parsed[shortcut] = payload["raw_value"]
-                elif "raw_value" in payload:
-                    # Only raw_value present
-                    parsed[shortcut] = payload["raw_value"]
-                else:
-                    parsed[shortcut] = payload
+                # Keep the full dict structure with all metadata
+                parsed[shortcut] = payload
             else:
                 parsed[shortcut] = payload
 

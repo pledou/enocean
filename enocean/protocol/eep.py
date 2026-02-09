@@ -91,6 +91,9 @@ class EEP(object):
         scl_min = float(scl.find("min").text)
         scl_max = float(scl.find("max").text)
 
+        # Check if raw value is within the valid range
+        out_of_range = raw_value < rng_min or raw_value > rng_max
+
         return {
             source["shortcut"]: {
                 "description": source.get("description"),
@@ -100,6 +103,7 @@ class EEP(object):
                 * (raw_value - rng_min)
                 + scl_min,
                 "raw_value": raw_value,
+                "out_of_range": out_of_range,
             }
         }
 
