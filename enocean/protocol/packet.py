@@ -711,6 +711,163 @@ class EventPacket(Packet):
         return super(EventPacket, self).parse()
 
 
+class MSCPacket(RadioPacket):
+    """Manufacturer Specific Communication (MSC) packet.
+
+    MSC packets use RORG 0xD1 and contain manufacturer-specific data.
+    This class provides constructors for creating MSC packets for supported manufacturers.
+    """
+
+    def __init__(
+        self,
+        manufacturer,
+        command,
+        destination=None,
+        sender=None,
+        **kwargs,
+    ):
+        """Create an MSC packet for the specified manufacturer.
+
+        Args:
+            manufacturer: Manufacturer ID (e.g., 0x079 for VentilAirSec)
+            command: Command nibble (0-15, manufacturer-specific)
+            destination: Destination address as 4-byte list (default: broadcast)
+            sender: Sender address as 4-byte list (required)
+            **kwargs: Manufacturer/command-specific field values
+
+        Raises:
+            ValueError: If sender is missing or manufacturer not supported
+        """
+        if sender is None:
+            raise ValueError("Sender address is required for MSC packets")
+
+        if destination is None:
+            self.logger.warning("Replacing destination with broadcast address.")
+            destination = [0xFF, 0xFF, 0xFF, 0xFF]
+
+        if not isinstance(destination, list) or len(destination) != 4:
+            raise ValueError(
+                "Destination must be a list containing 4 (numeric) values."
+            )
+
+        if not isinstance(sender, list) or len(sender) != 4:
+            raise ValueError("Sender must be a list containing 4 (numeric) values.")
+
+        # Build packet data based on manufacturer
+        if manufacturer in (0x079, 0x79):
+            data, optional = self._build_ventilairsec_data(
+                command, destination, sender, **kwargs
+            )
+        else:
+            raise ValueError(f"MSC manufacturer 0x{manufacturer:03x} not supported yet")
+
+        # Initialize parent RadioPacket with constructed data
+        super().__init__(PACKET.RADIO_ERP1, data=data, optional=optional)
+
+        # Set MSC-specific attributes
+        self.rorg = 0xD1
+        self.rorg_manufacturer = manufacturer
+        self.cmd = command
+
+    def _build_ventilairsec_data(self, command, destination, sender, **kwargs):
+        """Build packet data for VentilAirSec VMI devices.
+
+        VentilAirSec uses manufacturer ID 0x079 and command structure:
+        - Byte 0: 0xD1 (RORG for MSC)
+        - Byte 1: 0x07 (high byte of manufacturer ID)
+        - Byte 2: 0x90 + CMD (low byte with command in high nibble)
+        - Bytes 3-N: Data fields depending on CMD
+        - Last 5 bytes: sender ID + status (0x80)
+
+        CMD=0: Control command with fields:
+            MODEFONC, FONC, VACS, BOOST, TEMPEL, TEMPSOUF, TEMPHYD, TEMPSOL, COMMAND
+        CMD=1: Hour setting (HOUR data)
+        CMD=2: Agenda setting (AGENDA data)
+
+        Returns:
+            Tuple of (data, optional) byte arrays
+        """
+        data = [0xD1]  # RORG for MSC
+
+        if command == 0:
+            # CMD=0: Control command
+            data.extend([0x07, 0x90])
+
+            # Add fields in order, use 0xFF for missing fields
+            field_order = [
+                "MODEFONC",
+                "FONC",
+                "VACS",
+                "BOOST",
+                "TEMPEL",
+                "TEMPSOUF",
+                "TEMPHYD",
+                "TEMPSOL",
+                "COMMAND",
+            ]
+
+            for field in field_order:
+                if field in kwargs and kwargs[field] is not None:
+                    value = kwargs[field]
+                    # FONC is binary string, others are integers
+                    if field == "FONC" and isinstance(value, str):
+                        data.append(int(value, 2))
+                    else:
+                        # Convert to int and ensure it's in valid range
+                        int_value = int(value)
+                        if int_value < 0 or int_value > 255:
+                            self.logger.warning(
+                                "Field %s value %d out of range, clamping",
+                                field,
+                                int_value,
+                            )
+                            int_value = max(0, min(255, int_value))
+                        data.append(int_value)
+                else:
+                    # Missing field = 0xFF
+                    data.append(0xFF)
+
+        elif command == 1:
+            # CMD=1: Hour setting
+            data.extend([0x07, 0x91])
+            if "HOUR" in kwargs:
+                hour_data = kwargs["HOUR"]
+                if isinstance(hour_data, str):
+                    hour_bytes = bytes.fromhex(hour_data)
+                    data.extend(hour_bytes)
+                else:
+                    data.extend(hour_data)
+
+        elif command == 2:
+            # CMD=2: Agenda setting
+            data.extend([0x07, 0x92])
+            if "AGENDA" in kwargs:
+                agenda_data = kwargs["AGENDA"]
+                if isinstance(agenda_data, str):
+                    agenda_bytes = bytes.fromhex(agenda_data)
+                    data.extend(agenda_bytes)
+                else:
+                    data.extend(agenda_data)
+        else:
+            raise ValueError(f"VentilAirSec command {command} not supported")
+
+        # Add sender and status byte
+        data.extend(sender)
+        data.append(0x80)  # Status byte
+
+        # Build optional data: sub-telegram, destination, dBm, security
+        optional = [0x03] + destination + [0xFF, 0x00]
+
+        self.logger.debug(
+            "Built VentilAirSec MSC packet: CMD=%d, data_len=%d, data=%s",
+            command,
+            len(data),
+            " ".join(f"0x{b:02x}" for b in data),
+        )
+
+        return data, optional
+
+
 class ChainedPacket(RadioPacket):
     """Handles CHAINED telegrams (RORG 0xC8 or 0x40) for multi-part messages.
 
