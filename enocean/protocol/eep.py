@@ -116,6 +116,9 @@ class EEP(object):
         if value_desc is None:
             value_desc = self._get_rangeitem(source, raw_value)
 
+        # Check if the enum value is valid (has a matching item or rangeitem)
+        invalid_enum = value_desc is None
+
         # If no explicit item or rangeitem matches, fall back to the
         # raw numeric value rather than raising when indexing None.
         if value_desc is None:
@@ -144,6 +147,7 @@ class EEP(object):
                 "unit": source.get("unit", ""),
                 "value": value_text,
                 "raw_value": raw_value,
+                "invalid_enum": invalid_enum,
             }
         }
 

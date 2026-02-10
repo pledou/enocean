@@ -1919,16 +1919,10 @@
             <rangeitem description="Durée restantes {value}min" start="1" end="200" />
             <item description="Actif (temps restant inconnu)" value="255" />
           </enum>
-          <value description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="48" size="8" unit="">
-            <range>
-              <min>0</min>
-              <max>18</max>
-            </range>
-            <scale>
-              <min>0</min>
-              <max>18</max>
-            </scale>
-          </value>
+          <enum description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="48" size="8" unit="">
+            <item description="Desactive" value="0" />
+            <rangeitem description="{value}°C" start="1" end="18" />
+          </enum>
           <value description="Temperature max soufflage" shortcut="TEMPMSOUFFL" offset="56" size="8" unit="">
             <range>
               <min>20</min>
@@ -1939,26 +1933,14 @@
               <max>45</max>
             </scale>
           </value>
-          <value description="Temperature consigne Hydror" shortcut="TEMPCHYDROR" offset="64" size="8" unit="">
-            <range>
-              <min>8</min>
-              <max>28</max>
-            </range>
-            <scale>
-              <min>8</min>
-              <max>28</max>
-            </scale>
-          </value>
-          <value description="Temperature consigne Solarr" shortcut="TEMPCSOLAR" offset="72" size="8" unit="">
-            <range>
-              <min>18</min>
-              <max>30</max>
-            </range>
-            <scale>
-              <min>18</min>
-              <max>30</max>
-            </scale>
-          </value>
+          <enum description="Temperature consigne Hydror" shortcut="TEMPCHYDROR" offset="64" size="8" unit="">
+            <item description="Desactive" value="0" />
+            <rangeitem description="{value}°C" start="8" end="28" />
+          </enum>
+          <enum description="Temperature consigne Solarr" shortcut="TEMPCSOLAR" offset="72" size="8" unit="">
+            <item description="Desactive" value="0" />
+            <rangeitem description="{value}°C" start="18" end="30" />
+          </enum>
           <enum description="Maj Logiciel" shortcut="MAJL" offset="84" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
@@ -2391,16 +2373,10 @@
           <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Ouverture bypass 1" shortcut="OUVBY1" offset="24" size="8" unit="">
-            <range>
-              <min>0</min>
-              <max>100</max>
-            </range>
-            <scale>
-              <min>0</min>
-              <max>100</max>
-            </scale>
-          </value>
+          <enum description="Ouverture bypass 1" shortcut="OUVBY1" offset="24" size="8" unit="">
+            <rangeitem description="{value}%" start="0" end="100" />
+            <item description="Non applicable" value="255" />
+          </enum>
           <enum description="Position bypass 1" shortcut="POSBY1" offset="32" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
@@ -2409,16 +2385,10 @@
             <item description="Manuel" value="4" />
             <item description="Unknown" value="255" />
           </enum>
-          <value description="Ouverture bypass 2" shortcut="OUVBY2" offset="40" size="8" unit="">
-            <range>
-              <min>0</min>
-              <max>100</max>
-            </range>
-            <scale>
-              <min>0</min>
-              <max>100</max>
-            </scale>
-          </value>
+          <enum description="Ouverture bypass 2" shortcut="OUVBY2" offset="40" size="8" unit="">
+            <rangeitem description="{value}%" start="0" end="100" />
+            <item description="Non applicable" value="255" />
+          </enum>
           <enum description="Position bypass 2" shortcut="POSBY2" offset="48" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
@@ -2427,16 +2397,10 @@
             <item description="Manuel" value="4" />
             <item description="Unknown" value="255" />
           </enum>
-          <value description="Ouverture bypass 3" shortcut="OUVBY3" offset="56" size="8" unit="">
-            <range>
-              <min>0</min>
-              <max>100</max>
-            </range>
-            <scale>
-              <min>0</min>
-              <max>100</max>
-            </scale>
-          </value>
+          <enum description="Ouverture bypass 3" shortcut="OUVBY3" offset="56" size="8" unit="">
+            <rangeitem description="{value}%" start="0" end="100" />
+            <item description="Non applicable" value="255" />
+          </enum>
           <enum description="Position bypass 3" shortcut="POSBY3" offset="64" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
