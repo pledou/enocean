@@ -856,7 +856,9 @@ class MSCPacket(RadioPacket):
         data.append(0x80)  # Status byte
 
         # Build optional data: sub-telegram, destination, dBm, security
-        optional = [0x03] + destination + [0xFF, 0x00]
+        # VentilAirSec devices expect broadcast address in optional data
+        # The actual destination is implicit from the context/pairing
+        optional = [0x03] + [0xFF, 0xFF, 0xFF, 0xFF] + [0xFF, 0x00]
 
         self.logger.debug(
             "Built VentilAirSec MSC packet: CMD=%d, data_len=%d, data=%s",

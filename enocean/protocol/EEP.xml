@@ -1921,7 +1921,7 @@
           </enum>
           <enum description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="48" size="8" unit="">
             <item description="Desactive" value="0" />
-            <rangeitem description="{value}°C" start="1" end="18" />
+            <rangeitem description="{value}°C" start="12" end="18" />
           </enum>
           <value description="Temperature max soufflage" shortcut="TEMPMSOUFFL" offset="56" size="8" unit="">
             <range>
