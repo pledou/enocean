@@ -1792,7 +1792,7 @@
   <telegram rorg="0xD1079" type="MSC" description="MSC Telegram Ventilairsec">
     <profiles func="0x00" description="0x00">
       <profile type="0x00" description="0x00">
-        <command description="command indentifier" shortcut="CMD" offset="20" size="4">
+        <command description="command indentifier" shortcut="CMD" offset="12" size="4">
           <item description="Cyclic" value="1" />
           <item description="Action" value="2" />
           <item description="Awake" value="3" />
@@ -1800,10 +1800,10 @@
           <item description="Test" value="7" />
         </command>
         <data command="1" bits="6">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Batterie" shortcut="Batt" offset="24" size="8">
+          <value description="Batterie" shortcut="Batt" offset="16" size="8">
             <range>
               <min>0</min>
               <max>6</max>
@@ -1813,7 +1813,7 @@
               <max>100</max>
             </scale>
           </value>
-          <value description="Temperature" shortcut="TEMP" offset="32" size="16" unit="">
+          <value description="Temperature" shortcut="TEMP" offset="24" size="16" unit="">
             <range>
               <min>0</min>
               <max>16500</max>
@@ -1823,7 +1823,7 @@
               <max>125.00</max>
             </scale>
           </value>
-          <value description="Humidité" shortcut="HUM" offset="48" size="8" unit="">
+          <value description="Humidité" shortcut="HUM" offset="40" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -1835,10 +1835,10 @@
           </value>
         </data>
         <data command="3" bits="6">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Batterie" shortcut="Batt" offset="24" size="8">
+          <value description="Batterie" shortcut="Batt" offset="16" size="8">
             <range>
               <min>0</min>
               <max>6</max>
@@ -1848,7 +1848,7 @@
               <max>100</max>
             </scale>
           </value>
-          <value description="Temperature" shortcut="TEMP" offset="32" size="16" unit="">
+          <value description="Temperature" shortcut="TEMP" offset="24" size="16" unit="">
             <range>
               <min>0</min>
               <max>16500</max>
@@ -1858,7 +1858,7 @@
               <max>125.00</max>
             </scale>
           </value>
-          <value description="Humidité" shortcut="HUM" offset="48" size="8" unit="">
+          <value description="Humidité" shortcut="HUM" offset="40" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -1873,7 +1873,7 @@
     </profiles>
     <profiles func="0x01" description="0x01">
       <profile type="0x00" description="0x00">
-        <command description="command indentifier" shortcut="CMD" offset="20" size="4">
+        <command description="command indentifier" shortcut="CMD" offset="12" size="4">
           <item description="Donnees courantes" value="0" />
           <item description="Donnees courantes complement 1" value="1" />
           <item description="Donnees courantes complement 2" value="2" />
@@ -1885,45 +1885,45 @@
           <item description="Capteurs appaires" value="8" />
         </command>
         <data command="0" bits="13">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Mode de fonctionnement" shortcut="MF" offset="24" size="8">
+          <enum description="Mode de fonctionnement" shortcut="MF" offset="16" size="8">
             <item description="Standby" value="0" />
             <item description="Eco" value="1" />
             <item description="Std" value="2" />
             <item description="Confort" value="3" />
           </enum>
-          <enum description="Bypass" shortcut="BYP" offset="34" size="1">
+          <enum description="Bypass" shortcut="BYP" offset="26" size="1">
             <item description="Toiture" value="0" />
             <item description="Autre" value="1" />
           </enum>
-          <enum description="Plage horaire" shortcut="PLH" offset="35" size="1">
+          <enum description="Plage horaire" shortcut="PLH" offset="27" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Debit fixe" shortcut="DEBF" offset="36" size="1">
+          <enum description="Debit fixe" shortcut="DEBF" offset="28" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="SurVentilation" shortcut="SURV" offset="38" size="1">
+          <enum description="SurVentilation" shortcut="SURV" offset="30" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Vacances" shortcut="VAC" offset="39" size="1">
+          <enum description="Vacances" shortcut="VAC" offset="31" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Boost" shortcut="BOOS" offset="40" size="8">
+          <enum description="Boost" shortcut="BOOS" offset="32" size="8">
             <item description="Inactif" value="0" />
             <rangeitem description="Durée restantes {value}min" start="1" end="200" />
             <item description="Actif (temps restant inconnu)" value="255" />
           </enum>
-          <enum description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="48" size="8" unit="">
+          <enum description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="40" size="8" unit="">
             <item description="Desactive" value="0" />
             <rangeitem description="{value}°C" start="12" end="18" />
           </enum>
-          <value description="Temperature max soufflage" shortcut="TEMPMSOUFFL" offset="56" size="8" unit="">
+          <value description="Temperature max soufflage" shortcut="TEMPMSOUFFL" offset="48" size="8" unit="">
             <range>
               <min>20</min>
               <max>45</max>
@@ -1933,45 +1933,45 @@
               <max>45</max>
             </scale>
           </value>
-          <enum description="Temperature consigne Hydror" shortcut="TEMPCHYDROR" offset="64" size="8" unit="">
+          <enum description="Temperature consigne Hydror" shortcut="TEMPCHYDROR" offset="56" size="8" unit="">
             <item description="Desactive" value="0" />
             <rangeitem description="{value}°C" start="8" end="28" />
           </enum>
-          <enum description="Temperature consigne Solarr" shortcut="TEMPCSOLAR" offset="72" size="8" unit="">
+          <enum description="Temperature consigne Solarr" shortcut="TEMPCSOLAR" offset="64" size="8" unit="">
             <item description="Desactive" value="0" />
             <rangeitem description="{value}°C" start="18" end="30" />
           </enum>
-          <enum description="Maj Logiciel" shortcut="MAJL" offset="84" size="1">
+          <enum description="Maj Logiciel" shortcut="MAJL" offset="76" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Appairage" shortcut="APPA" offset="85" size="1">
+          <enum description="Appairage" shortcut="APPA" offset="77" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Test" shortcut="TEST" offset="86" size="1">
+          <enum description="Test" shortcut="TEST" offset="78" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Localisation" shortcut="LOC" offset="87" size="1">
+          <enum description="Localisation" shortcut="LOC" offset="79" size="1">
             <item description="Inactif" value="0" />
             <item description="Actif" value="1" />
           </enum>
-          <enum description="Saison" shortcut="SAIS" offset="88" size="8">
+          <enum description="Saison" shortcut="SAIS" offset="80" size="8">
             <item description="Ete" value="0" />
             <item description="Hiver" value="1" />
             <item description="Intermediaire" value="2" />
           </enum>
-          <enum description="Type evenement" shortcut="TYPEV" offset="96" size="8">
+          <enum description="Type evenement" shortcut="TYPEV" offset="88" size="8">
             <item description="Stockage periodique" value="0" />
             <item description="Stockage evenementielle" value="1" />
           </enum>
         </data>
         <data command="1" bits="8">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Debit air sortant" shortcut="DEBAS" offset="24" size="16" unit="">
+          <value description="Debit air sortant" shortcut="DEBAS" offset="16" size="16" unit="">
             <range>
               <min>0</min>
               <max>350</max>
@@ -1981,7 +1981,7 @@
               <max>350</max>
             </scale>
           </value>
-          <value description="Puissance chauffage" shortcut="PCHAUFF" offset="40" size="8" unit="">
+          <value description="Puissance chauffage" shortcut="PCHAUFF" offset="32" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -1991,14 +1991,14 @@
               <max>100</max>
             </scale>
           </value>
-          <enum description="Etat systeme" shortcut="ETATS" offset="48" size="8">
+          <enum description="Etat systeme" shortcut="ETATS" offset="40" size="8">
             <item description="Mode Boost" value="0" />
             <item description="Mode Vacances" value="1" />
             <item description="Mode Standby" value="2" />
             <item description="Mode Debit Fixe" value="3" />
             <item description="Mode Normal" value="4" />
           </enum>
-          <enum description="Consigne vitesse moteur" shortcut="CVITM" offset="56" size="8">
+          <enum description="Consigne vitesse moteur" shortcut="CVITM" offset="48" size="8">
             <item description="Vitesse 0" value="0" />
             <item description="Vitesse 1" value="1" />
             <item description="Vitesse 2" value="2" />
@@ -2008,10 +2008,10 @@
           </enum>
         </data>
         <data command="2" bits="10">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Temperature exterieure" shortcut="TEMPEXT" offset="24" size="8" unit="">
+          <value description="Temperature exterieure" shortcut="TEMPEXT" offset="16" size="8" unit="">
             <range>
               <min>-120</min>
               <max>120</max>
@@ -2021,7 +2021,7 @@
               <max>120</max>
             </scale>
           </value>
-          <value description="Consigne de pression differentielle" shortcut="CPDIFF" offset="32" size="16" unit="">
+          <value description="Consigne de pression differentielle" shortcut="CPDIFF" offset="24" size="16" unit="">
             <range>
               <min>0</min>
               <max>600</max>
@@ -2031,7 +2031,7 @@
               <max>600</max>
             </scale>
           </value>
-          <value description="Indice encrassement filtre" shortcut="IEFIL" offset="48" size="8" unit="">
+          <value description="Indice encrassement filtre" shortcut="IEFIL" offset="40" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2041,7 +2041,7 @@
               <max>100</max>
             </scale>
           </value>
-          <value description="Rapport Cyclique boucle d'eau" shortcut="RCBEAU" offset="56" size="8" unit="">
+          <value description="Rapport Cyclique boucle d'eau" shortcut="RCBEAU" offset="48" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2051,7 +2051,7 @@
               <max>100</max>
             </scale>
           </value>
-          <value description="Duree fonctionnement" shortcut="DFONC" offset="64" size="16" unit="">
+          <value description="Duree fonctionnement" shortcut="DFONC" offset="56" size="16" unit="">
             <range>
               <min>0</min>
               <max>65535</max>
@@ -2063,10 +2063,10 @@
           </value>
         </data>
         <data command="3" bits="12">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Identifiant Machine" shortcut="IDMACH" offset="24" size="32" unit="">
+          <value description="Identifiant Machine" shortcut="IDMACH" offset="16" size="32" unit="">
             <range>
               <min>0</min>
               <max>4294967295</max>
@@ -2076,27 +2076,27 @@
               <max>4294967295</max>
             </scale>
           </value>
-          <enum description="Test QAI" shortcut="TQAI" offset="59" size="1">
+          <enum description="Test QAI" shortcut="TQAI" offset="51" size="1">
             <item description="KO" value="0" />
             <item description="OK" value="1" />
           </enum>
-          <enum description="Test Moteur" shortcut="TMOT" offset="60" size="1">
+          <enum description="Test Moteur" shortcut="TMOT" offset="52" size="1">
             <item description="KO" value="0" />
             <item description="OK" value="1" />
           </enum>
-          <enum description="Test Prechauffe" shortcut="TPCHAU" offset="61" size="1">
+          <enum description="Test Prechauffe" shortcut="TPCHAU" offset="53" size="1">
             <item description="KO" value="0" />
             <item description="OK" value="1" />
           </enum>
-          <enum description="Test Sonde" shortcut="TSOND" offset="62" size="1">
+          <enum description="Test Sonde" shortcut="TSOND" offset="54" size="1">
             <item description="KO" value="0" />
             <item description="OK" value="1" />
           </enum>
-          <enum description="Test Global" shortcut="TGLOB" offset="63" size="1">
+          <enum description="Test Global" shortcut="TGLOB" offset="55" size="1">
             <item description="KO" value="0" />
             <item description="OK" value="1" />
           </enum>
-          <value description="Code ERR 1" shortcut="CERR1" offset="64" size="8" unit="">
+          <value description="Code ERR 1" shortcut="CERR1" offset="56" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2106,7 +2106,7 @@
               <max>255</max>
             </scale>
           </value>
-          <value description="Code ERR 2" shortcut="CERR2" offset="72" size="8" unit="">
+          <value description="Code ERR 2" shortcut="CERR2" offset="64" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2116,7 +2116,7 @@
               <max>255</max>
             </scale>
           </value>
-          <value description="Nombre de semaine depuis derniere maintenant" shortcut="NBSDMAINT" offset="80" size="8" unit="">
+          <value description="Nombre de semaine depuis derniere maintenant" shortcut="NBSDMAINT" offset="72" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2126,7 +2126,7 @@
               <max>255</max>
             </scale>
           </value>
-          <value description="Consommation cumulee" shortcut="CONSO" offset="88" size="8" unit="">
+          <value description="Consommation cumulee" shortcut="CONSO" offset="80" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2138,37 +2138,37 @@
           </value>
         </data>
         <data command="4" bits="12">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Type de caisson" shortcut="TYPCAI" offset="24" size="8">
+          <enum description="Type de caisson" shortcut="TYPCAI" offset="16" size="8">
             <item description="Purevent" value="1" />
             <item description="Urban" value="2" />
             <item description="ERP" value="3" />
           </enum>
-          <enum description="Bypass amont" shortcut="BYPAMO" offset="37" size="1">
+          <enum description="Bypass amont" shortcut="BYPAMO" offset="29" size="1">
             <item description="Absent" value="0" />
             <item description="Present" value="1" />
           </enum>
-          <enum description="SolarR" shortcut="SOLARR" offset="38" size="1">
+          <enum description="SolarR" shortcut="SOLARR" offset="30" size="1">
             <item description="Absent" value="0" />
             <item description="Present" value="1" />
           </enum>
-          <enum description="HydroR" shortcut="HYDROR" offset="39" size="1">
+          <enum description="HydroR" shortcut="HYDROR" offset="31" size="1">
             <item description="Absent" value="0" />
             <item description="Present" value="1" />
           </enum>
-          <value description="Volume a Ventiler" shortcut="VVENT" offset="40" size="16" unit="">
+          <value description="Volume a Ventiler" shortcut="VVENT" offset="32" size="16" unit="m3">
             <range>
               <min>20</min>
-              <max>200</max>
+                <max>2000</max>
             </range>
             <scale>
               <min>20</min>
-              <max>200</max>
+              <max>2000</max>
             </scale>
           </value>
-          <value description="Annee installation" shortcut="AINST" offset="56" size="8" unit="">
+          <value description="Annee installation" shortcut="AINST" offset="48" size="8" unit="">
             <range>
               <min>0</min>
               <max>99</max>
@@ -2178,7 +2178,7 @@
               <max>99</max>
             </scale>
           </value>
-          <value description="Mois installation" shortcut="MINST" offset="64" size="8" unit="">
+          <value description="Mois installation" shortcut="MINST" offset="56" size="8" unit="">
             <range>
               <min>1</min>
               <max>12</max>
@@ -2188,7 +2188,7 @@
               <max>12</max>
             </scale>
           </value>
-          <value description="Jour installation" shortcut="JINST" offset="72" size="8" unit="">
+          <value description="Jour installation" shortcut="JINST" offset="64" size="8" unit="">
             <range>
               <min>1</min>
               <max>31</max>
@@ -2198,7 +2198,7 @@
               <max>31</max>
             </scale>
           </value>
-          <value description="Version Logiciel Embarque" shortcut="VLOG" offset="80" size="8" unit="">
+          <value description="Version Logiciel Embarque" shortcut="VLOG" offset="72" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2208,7 +2208,7 @@
               <max>255</max>
             </scale>
           </value>
-          <value description="Version Electronique" shortcut="VELEC" offset="88" size="8" unit="">
+          <value description="Version Electronique" shortcut="VELEC" offset="80" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>
@@ -2220,10 +2220,10 @@
           </value>
         </data>
         <data command="5" bits="12">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Position 0" shortcut="POS0" offset="24" size="8">
+          <enum description="Position 0" shortcut="POS0" offset="16" size="8">
             <item description="Sortie des resistances" value="0" />
             <item description="Au niveau de l'entree d'air" value="1" />
             <item description="En sortie de la boucle d'eau" value="2" />
@@ -2231,7 +2231,7 @@
             <item description="Sur le bypass" value="4" />
             <item description="Sonde absente" value="255" />
           </enum>
-          <value description="Temperature 0" shortcut="TEMP0" offset="32" size="8" unit="">
+          <value description="Temperature 0" shortcut="TEMP0" offset="24" size="8" unit="">
             <range>
               <min>-127</min>
               <max>127</max>
@@ -2241,7 +2241,7 @@
               <max>127</max>
             </scale>
           </value>
-          <value description="Humidite relative 0" shortcut="HUM0" offset="40" size="8" unit="">
+          <value description="Humidite relative 0" shortcut="HUM0" offset="32" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2251,7 +2251,7 @@
               <max>100</max>
             </scale>
           </value>
-          <enum description="Position 1" shortcut="POS1" offset="48" size="8">
+          <enum description="Position 1" shortcut="POS1" offset="40" size="8">
             <item description="Sortie des resistances" value="0" />
             <item description="Au niveau de l'entree d'air" value="1" />
             <item description="En sortie de la boucle d'eau" value="2" />
@@ -2259,7 +2259,7 @@
             <item description="Sur le bypass" value="4" />
             <item description="Sonde absente" value="255" />
           </enum>
-          <value description="Temperature 1" shortcut="TEMP1" offset="56" size="8" unit="">
+          <value description="Temperature 1" shortcut="TEMP1" offset="48" size="8" unit="">
             <range>
               <min>-127</min>
               <max>127</max>
@@ -2269,7 +2269,7 @@
               <max>127</max>
             </scale>
           </value>
-          <value description="Humidite relative 1" shortcut="HUM1" offset="64" size="8" unit="">
+          <value description="Humidite relative 1" shortcut="HUM1" offset="56" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2279,7 +2279,7 @@
               <max>100</max>
             </scale>
           </value>
-          <enum description="Position 2" shortcut="POS2" offset="72" size="8">
+          <enum description="Position 2" shortcut="POS2" offset="64" size="8">
             <item description="Sortie des resistances" value="0" />
             <item description="Au niveau de l'entree d'air" value="1" />
             <item description="En sortie de la boucle d'eau" value="2" />
@@ -2287,7 +2287,7 @@
             <item description="Sur le bypass" value="4" />
             <item description="Sonde absente" value="255" />
           </enum>
-          <value description="Temperature 2" shortcut="TEMP2" offset="80" size="8" unit="">
+          <value description="Temperature 2" shortcut="TEMP2" offset="72" size="8" unit="">
             <range>
               <min>-127</min>
               <max>127</max>
@@ -2297,7 +2297,7 @@
               <max>127</max>
             </scale>
           </value>
-          <value description="Humidite relative 2" shortcut="HUM2" offset="88" size="8" unit="">
+          <value description="Humidite relative 2" shortcut="HUM2" offset="80" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2309,10 +2309,10 @@
           </value>
         </data>
         <data command="6" bits="9">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Position 3" shortcut="POS3" offset="24" size="8">
+          <enum description="Position 3" shortcut="POS3" offset="16" size="8">
             <item description="Sortie des resistances" value="0" />
             <item description="Au niveau de l'entree d'air" value="1" />
             <item description="En sortie de la boucle d'eau" value="2" />
@@ -2320,7 +2320,7 @@
             <item description="Sur le bypass" value="4" />
             <item description="Sonde absente" value="255" />
           </enum>
-          <value description="Temperature 3" shortcut="TEMP3" offset="32" size="8" unit="">
+          <value description="Temperature 3" shortcut="TEMP3" offset="24" size="8" unit="">
             <range>
               <min>-127</min>
               <max>127</max>
@@ -2330,7 +2330,7 @@
               <max>127</max>
             </scale>
           </value>
-          <value description="Humidite relative 3" shortcut="HUM3" offset="40" size="8" unit="">
+          <value description="Humidite relative 3" shortcut="HUM3" offset="32" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2340,7 +2340,7 @@
               <max>100</max>
             </scale>
           </value>
-          <enum description="Position 4" shortcut="POS4" offset="48" size="8">
+          <enum description="Position 4" shortcut="POS4" offset="40" size="8">
             <item description="Sortie des resistances" value="0" />
             <item description="Au niveau de l'entree d'air" value="1" />
             <item description="En sortie de la boucle d'eau" value="2" />
@@ -2348,7 +2348,7 @@
             <item description="Sur le bypass" value="4" />
             <item description="Sonde absente" value="255" />
           </enum>
-          <value description="Temperature 4" shortcut="TEMP4" offset="56" size="8" unit="">
+          <value description="Temperature 4" shortcut="TEMP4" offset="48" size="8" unit="">
             <range>
               <min>-127</min>
               <max>127</max>
@@ -2358,7 +2358,7 @@
               <max>127</max>
             </scale>
           </value>
-          <value description="Humidite relative 4" shortcut="HUM4" offset="64" size="8" unit="">
+          <value description="Humidite relative 4" shortcut="HUM4" offset="56" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2370,14 +2370,14 @@
           </value>
         </data>
         <data command="7" bits="10">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <enum description="Ouverture bypass 1" shortcut="OUVBY1" offset="24" size="8" unit="">
+          <enum description="Ouverture bypass 1" shortcut="OUVBY1" offset="16" size="8" unit="">
             <rangeitem description="{value}%" start="0" end="100" />
             <item description="Non applicable" value="255" />
           </enum>
-          <enum description="Position bypass 1" shortcut="POSBY1" offset="32" size="8">
+          <enum description="Position bypass 1" shortcut="POSBY1" offset="24" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
             <item description="Source Chaude Solaire" value="2" />
@@ -2385,11 +2385,11 @@
             <item description="Manuel" value="4" />
             <item description="Unknown" value="255" />
           </enum>
-          <enum description="Ouverture bypass 2" shortcut="OUVBY2" offset="40" size="8" unit="">
+          <enum description="Ouverture bypass 2" shortcut="OUVBY2" offset="32" size="8" unit="">
             <rangeitem description="{value}%" start="0" end="100" />
             <item description="Non applicable" value="255" />
           </enum>
-          <enum description="Position bypass 2" shortcut="POSBY2" offset="48" size="8">
+          <enum description="Position bypass 2" shortcut="POSBY2" offset="40" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
             <item description="Source Chaude Solaire" value="2" />
@@ -2397,11 +2397,11 @@
             <item description="Manuel" value="4" />
             <item description="Unknown" value="255" />
           </enum>
-          <enum description="Ouverture bypass 3" shortcut="OUVBY3" offset="56" size="8" unit="">
+          <enum description="Ouverture bypass 3" shortcut="OUVBY3" offset="48" size="8" unit="">
             <rangeitem description="{value}%" start="0" end="100" />
             <item description="Non applicable" value="255" />
           </enum>
-          <enum description="Position bypass 3" shortcut="POSBY3" offset="64" size="8">
+          <enum description="Position bypass 3" shortcut="POSBY3" offset="56" size="8">
             <item description="Inactif" value="0" />
             <item description="Source Chaude Autre" value="1" />
             <item description="Source Chaude Solaire" value="2" />
@@ -2409,7 +2409,7 @@
             <item description="Manuel" value="4" />
             <item description="Unknown" value="255" />
           </enum>
-          <value description="Ouverture vanne HydroR" shortcut="OUVHYDR" offset="72" size="8" unit="">
+          <value description="Ouverture vanne HydroR" shortcut="OUVHYDR" offset="64" size="8" unit="">
             <range>
               <min>0</min>
               <max>100</max>
@@ -2421,10 +2421,10 @@
           </value>
         </data>
         <data command="8" bits="9">
-          <enum description="Command indentifier" shortcut="CMD" offset="20" size="4">
+          <enum description="Command indentifier" shortcut="CMD" offset="12" size="4">
             <rangeitem description="Command ID {value}" start="0" end="13" />
           </enum>
-          <value description="Identifiant Capteur" shortcut="IDAPP" offset="24" size="32" unit="">
+          <value description="Identifiant Capteur" shortcut="IDAPP" offset="16" size="32" unit="">
             <range>
               <min>0</min>
               <max>4294967295</max>
@@ -2434,7 +2434,7 @@
               <max>4294967295</max>
             </scale>
           </value>
-          <enum description="Pièce Capteur" shortcut="PIECEAPP" offset="56" size="8">
+          <enum description="Pièce Capteur" shortcut="PIECEAPP" offset="48" size="8">
             <item description="Inconnue" value="0" />
             <item description="Salon" value="1" />
             <item description="Cuisine" value="2" />
@@ -2447,13 +2447,13 @@
             <item description="Cellier" value="9" />
             <item description="Zone Neutre" value="10" />
           </enum>
-          <enum description="Profil Capteur" shortcut="PROFAPP" offset="64" size="8">
+          <enum description="Profil Capteur" shortcut="PROFAPP" offset="56" size="8">
             <item description="MSC Assistant Ventilairsec" value="1" />
             <item description="A5_04_01" value="2" />
             <item description="A5_09_04" value="3" />
             <item description="D2_04_08" value="4" />
           </enum>
-          <value description="Index" shortcut="CAPTINDEX" offset="72" size="8" unit="">
+          <value description="Index" shortcut="CAPTINDEX" offset="64" size="8" unit="">
             <range>
               <min>0</min>
               <max>255</max>

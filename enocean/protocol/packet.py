@@ -342,7 +342,11 @@ class Packet(object):
         # the concatenation of RORG byte (0xD1) + manufacturer ID (0x079)
         # We need to construct this value: (0xD1 << 12) | manufacturer_bits
         eep_rorg = self.rorg
-        if self.rorg == RORG.MSC and hasattr(self, "rorg_manufacturer"):
+        if (
+            self.rorg == RORG.MSC
+            and hasattr(self, "rorg_manufacturer")
+            and self.rorg_manufacturer is not None
+        ):
             # Construct full rorg value for Ventilairsec: 0xD1079 = (0xD1 << 12) | 0x079
             # rorg_manufacturer contains bits 0-12, where bits 0-8 are the RORG byte
             # We need to combine RORG byte with the next bits to match EEP.xml
@@ -484,10 +488,16 @@ class RadioPacket(Packet):
 
         if self.rorg == RORG.MSC:
             # MSC telegram: extract manufacturer and command bits
-            self.rorg_manufacturer = enocean.utils.from_bitarray(self._bit_data[0:12])
+            # Manufacturer ID is in bits 0:12 (12 bits) after RORG byte
+            # This matches the working HA_enoceanmqtt implementation
+            if self.rorg_manufacturer is None:
+                self.rorg_manufacturer = enocean.utils.from_bitarray(
+                    self._bit_data[0:12]
+                )
+
             manufacturer_hex = f"0x{self.rorg_manufacturer:03x}"
             if manufacturer_hex in ("0xd1079", "0x079", "0x79", "0x121"):
-                # Ventilairsec: 4-bit command at offset 12 defines func
+                # Ventilairsec: 4-bit command at bits 12:16 (right after manufacturer)
                 self.cmd = enocean.utils.from_bitarray(self._bit_data[12:16])
             else:
                 # Fallback: use 8-bit command starting at bit 16
