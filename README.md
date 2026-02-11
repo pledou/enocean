@@ -77,7 +77,7 @@ Automatically parses complex EnOcean Equipment Profiles with proper handling of:
 ### VentilAirSec Support
 Full support for VentilAirSec ventilation units including:
 - Operating mode control
-- Fan speed adjustment  
+- Fan speed adjustment
 - Temperature setpoints
 - Boost and holiday modes
 - Sensor monitoring
