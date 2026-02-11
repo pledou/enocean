@@ -1912,15 +1912,17 @@
           </enum>
           <enum description="Vacances" shortcut="VAC" offset="31" size="1">
             <item description="Inactif" value="0" />
-            <item description="Actif" value="1" />
+            <item description="Actif (temps restant inconnu)" value="1" />
+            <rangeitem description="Durée restantes {value}j" start="2" end="200" />
           </enum>
           <enum description="Boost" shortcut="BOOS" offset="32" size="8">
             <item description="Inactif" value="0" />
-            <rangeitem description="Durée restantes {value}min" start="1" end="200" />
+            <item description="Actif (temps restant inconnu)" value="1" />
+            <rangeitem description="Durée restantes {value}min" start="2" end="200" />
             <item description="Actif (temps restant inconnu)" value="255" />
           </enum>
           <enum description="Temperature consigne Electrique" shortcut="TEMPCELEC" offset="40" size="8" unit="">
-            <item description="Desactive" value="0" />
+            <item description="Desactive" value="4" />
             <rangeitem description="{value}°C" start="12" end="18" />
           </enum>
           <value description="Temperature max soufflage" shortcut="TEMPMSOUFFL" offset="48" size="8" unit="">

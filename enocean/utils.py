@@ -60,32 +60,9 @@ def crc8(data: bytes) -> int:
     return crc
 
 
-def build_esp3_radio(rorg: int, data: bytes, dest: bytes, tx_flags: int = 0) -> bytes:
-    """Build an ESP3 RADIO_ERP1 frame.
-
-    Args:
-        rorg: RORG byte (e.g. 0xD1)
-        data: data bytes payload (device-specific)
-        dest: 4-byte destination id (device address)
-        tx_flags: single byte tx flags appended after dest (default 0)
-
-    Returns:
-        Raw ESP3 frame bytes ready to write to serial
-    """
-    if not isinstance(dest, (bytes, bytearray)) or len(dest) != 4:
-        raise ValueError("dest must be 4 bytes")
-
-    payload = bytes([rorg]) + bytes(data) + bytes(dest) + bytes([tx_flags & 0xFF])
-
-    data_len = len(payload)
-    opt_len = 0
-    packet_type = 0x01  # RADIO_ERP1
-
-    header = bytes([(data_len >> 8) & 0xFF, data_len & 0xFF, opt_len, packet_type])
-    crc_h = crc8(header)
-
-    frame = b"\x55" + header + bytes([crc_h]) + payload + bytes([crc8(payload)])
-    return frame
+# NOTE: This function is deprecated. Use MSCPacket or RadioPacket.create() instead.
+# The Packet.build() method already handles ESP3 frame construction with proper
+# optional data support. See enocean.protocol.packet.MSCPacket for MSC packets.
 
 
 def send_esp3(
@@ -101,8 +78,10 @@ def send_esp3(
     ser.write(frame)
     if not read_response:
         return None
-    # best-effort read: read header (1 + 4 + 1 = start + header + crc)
-    # Wait a short time for device to respond; rely on serial timeout
+
+    # Read ESP3 response frame structure:
+    # Start (1) + Header (4) + HeaderCRC (1) + Data (data_len) + Optional (opt_len) + DataCRC (1)
+
     # Read start byte
     start = ser.read(1)
     if not start:
@@ -110,11 +89,23 @@ def send_esp3(
     if start != b"\x55":
         # not an ESP3 frame start; return what we got
         return start + ser.read(ser.in_waiting if hasattr(ser, "in_waiting") else 0)
+
+    # Read header (4 bytes)
     header = ser.read(4)
-    crc_h = ser.read(1)
-    if not header or not crc_h:
+    if not header or len(header) < 4:
         return b""
-    # compute payload length
+
+    # Read header CRC
+    crc_h = ser.read(1)
+    if not crc_h:
+        return b""
+
+    # Extract data length and optional length from header
     data_len = (header[0] << 8) | header[1]
-    payload = ser.read(data_len + 1)  # payload + data crc
+    opt_len = header[2]
+
+    # Read data + optional + data CRC
+    total_payload = data_len + opt_len + 1  # +1 for data CRC
+    payload = ser.read(total_payload)
+
     return start + header + crc_h + (payload or b"")
