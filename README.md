@@ -1,27 +1,104 @@
-# Python EnOcean #
+# Python EnOcean Extended
 
-[![Build Status](https://travis-ci.org/kipe/enocean.svg?branch=master)](https://travis-ci.org/kipe/enocean)
-[![Coverage Status](https://coveralls.io/repos/github/kipe/enocean/badge.svg?branch=master)](https://coveralls.io/github/kipe/enocean?branch=master)
+[![PyPI version](https://badge.fury.io/py/enocean-extended.svg)](https://badge.fury.io/py/enocean-extended)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/pypi/pyversions/enocean-extended)](https://pypi.org/project/enocean-extended/)
 
-A Python library for reading and controlling [EnOcean](http://www.enocean.com/) devices.
+An enhanced Python library for reading and controlling [EnOcean](http://www.enocean.com/) devices with extended device support and dynamic EEP parsing.
 
-Started as a part of [Forget Me Not](http://www.element14.com/community/community/design-challenges/forget-me-not)
+## What's New in This Fork
+
+This is an enhanced version of the original [kipe/enocean](https://github.com/kipe/enocean) library with:
+
+- **Dynamic EEP Parsing**: Improved parsing of complex EnOcean Equipment Profiles with proper enum handling
+- **Extended Device Support**: Additional EEP profiles including VentilAirSec ventilation units (D2-50-00, D2-50-01)
+- **Enhanced MSC Telegram Support**: Better handling of Manufacturer-Specific Command (MSC) telegrams
+- **Improved Enum Values**: Proper parsing of rangeitem enums with min/max values
+- **Better Error Handling**: More robust packet parsing and error reporting
+
+Originally started as part of [Forget Me Not](http://www.element14.com/community/community/design-challenges/forget-me-not)
 design challenge @ [element14](http://www.element14.com/).
 
-## Install ##
+## Installation
 
-If not installed already, install [pip](https://pypi.python.org/pypi/pip) by running
+Install from PyPI:
 
-`sudo apt-get install python-pip`
+```bash
+pip install enocean-extended
+```
 
-After pip is installed, install the module by running
+Or install from source for the latest development version:
 
-`sudo pip install enocean` (or `sudo pip install git+https://github.com/kipe/enocean.git` if you want the "bleeding edge").
+```bash
+pip install git+https://github.com/pledou/enocean.git
+```
 
-After this, it's just a matter of running `enocean_example.py` and pressing the
-learn button on magnetic contact or temperature switch or pressing the rocker switch.
+## Quick Start
 
-You should be displayed with a log of the presses, as well as parsed values
-(assuming the sensors are the ones provided in the [EnOcean Starter Kit](https://www.enocean.com/en/enocean_modules/esk-300)).
+After installation, you can run the example script and interact with your EnOcean devices:
 
-The example script can be stopped by pressing `CTRL+C`
+```python
+import enocean.utils
+from enocean.communicators.serialcommunicator import SerialCommunicator
+from enocean.protocol.packet import RadioPacket
+
+# Initialize the EnOcean dongle
+communicator = SerialCommunicator('/dev/ttyUSB0')
+communicator.start()
+
+# Receive packets
+for packet in communicator.receive.get(block=True, timeout=1):
+    if isinstance(packet, RadioPacket):
+        print(packet)
+```
+
+See the `examples/` directory for more usage examples, including VentilAirSec ventilation unit control.
+
+## Supported Devices
+
+This library supports a wide range of EnOcean Equipment Profiles (EEPs), including:
+
+- **Sensors**: Temperature, humidity, illumination, occupancy, CO2, etc.
+- **Switches**: Rocker switches, push buttons, window handles
+- **Actuators**: Light dimmers, blinds, valves
+- **Ventilation**: VentilAirSec units with full monitoring and control
+
+For a complete list, see [SUPPORTED_PROFILES.md](SUPPORTED_PROFILES.md).
+
+## Features
+
+### Dynamic EEP Parsing
+Automatically parses complex EnOcean Equipment Profiles with proper handling of:
+- Enum values with ranges
+- Multi-byte values
+- Manufacturer-specific commands (MSC)
+- Bitfield data
+
+### VentilAirSec Support
+Full support for VentilAirSec ventilation units including:
+- Operating mode control
+- Fan speed adjustment  
+- Temperature setpoints
+- Boost and holiday modes
+- Sensor monitoring
+- Maintenance status
+
+## Development
+
+To contribute or modify the library:
+
+```bash
+git clone https://github.com/pledou/enocean.git
+cd enocean
+pip install -e .[dev]
+pytest
+```
+
+## Credits
+
+- **Original Author**: Kimmo Huoman ([kipe/enocean](https://github.com/kipe/enocean))
+- **Enhanced Version**: Pierre Leduc with dynamic EEP parsing and extended device support
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file for details.

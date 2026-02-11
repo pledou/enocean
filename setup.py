@@ -5,9 +5,9 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    name="enocean",
+    name="enocean-extended",
     version="1.0.0",
-    description="EnOcean serial protocol implementation",
+    description="Enhanced EnOcean serial protocol implementation with dynamic EEP parsing",
     author="Pierre Leduc",
     author_email="p.leduc@etik.com",
     url="https://github.com/pledou/enocean",

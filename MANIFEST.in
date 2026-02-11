@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include SUPPORTED_PROFILES.md
+include requirements.txt
+recursive-include enocean *.xml
+recursive-include examples *.py
+recursive-exclude tests *
+recursive-exclude .github *
+exclude .gitignore
+exclude .flake8
+exclude .coveragerc
