@@ -1936,7 +1936,7 @@
             </scale>
           </value>
           <enum description="Temperature consigne Hydror" shortcut="TEMPCHYDROR" offset="56" size="8" unit="">
-            <item description="Desactive" value="0" />
+            <item description="Desactive" value="6" />
             <rangeitem description="{value}°C" start="8" end="28" />
           </enum>
           <enum description="Temperature consigne Solarr" shortcut="TEMPCSOLAR" offset="64" size="8" unit="">
