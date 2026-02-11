@@ -162,18 +162,19 @@ class TestVentilairsecRegression:
         """Test reassembly of a 2-part ventilairsec chain."""
         _CHAINED_STORAGE.clear()
 
-        # Part 1 (idx=0): seq=3, total_len=14
+        # Part 1 (idx=0): seq=3, total_len=20
+        # Payload starts with 0xD1 (RORG.MSC) followed by MSC data
         data1 = [
             0x40,
             0x30,  # RORG, seq=3, idx=0
             0x00,
-            0x14,  # total_len = 20 (0x14 = 20 decimal, "0" + "20" = "020" = 20)
-            0xAA,
-            0xBB,
-            0xCC,
-            0xDD,
-            0xEE,
-            0xFF,  # 6 bytes payload
+            0x14,  # total_len = 20 (0x14 = 20 decimal)
+            0xD1,  # RORG.MSC (first byte of payload)
+            0x07,
+            0x93,  # Manufacturer code (Aldes = 0x0793)
+            0x12,
+            0x11,
+            0x10,  # MSC data (6 bytes total)
             0x01,
             0x02,
             0x03,
@@ -187,18 +188,19 @@ class TestVentilairsecRegression:
         assert result1 == PARSE_RESULT.OK
         assert packet1 is None
 
-        # Part 2 (idx=1): continuation with 8 bytes (total: 14, still need 6 more)
+        # Part 2 (idx=1): continuation with 8 bytes (total: 14/20 bytes, need 6 more)
+        # Bytes 2-9 are continuation payload
         data2 = [
             0x40,
             0x31,  # RORG, seq=3, idx=1
-            0x11,
-            0x22,  # Bytes 2-3 are payload
-            0x33,
-            0x44,
-            0x55,
-            0x66,
-            0x77,
-            0x88,  # More payload (6 bytes)
+            0x10,
+            0x1F,
+            0xFF,
+            0xFF,
+            0x0E,
+            0x00,
+            0x00,
+            0x00,  # Continuation payload (8 bytes)
             0x01,
             0x02,
             0x03,
@@ -214,15 +216,16 @@ class TestVentilairsecRegression:
         assert packet2 is None
 
         # Part 3 (idx=2): final chunk with 6 bytes to reach 20
+        # Bytes 2-7 are final payload
         data3 = [
             0x40,
             0x32,  # RORG, seq=3, idx=2
-            0x99,
-            0xAA,  # Bytes 2-3 are payload
-            0xBB,
-            0xCC,
-            0xDD,
-            0xEE,  # More payload (4 bytes)
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,  # Final payload (6 bytes)
             0x01,
             0x02,
             0x03,
