@@ -28,7 +28,7 @@ jobs:
     
     - name: Run tests
       run: |
-        pytest tests/ -v
+        pytest enocean/ -v
     
     - name: Check package build
       run: |
