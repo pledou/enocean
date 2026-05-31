@@ -55,7 +55,7 @@ with codecs.open('SUPPORTED_PROFILES.md', 'w', 'utf-8') as f_handle:
                                 scale_min = float(scale.find('min').text)
                                 scale_max = float(scale.find('max').text)
 
-                                values.append('%s-%s ↔ %s-%s %s' % (range_min, range_max, scale_min, scale_max, parent['unit']))
+                                values.append('%s-%s ↔ %s-%s %s' % (range_min, range_max, scale_min, scale_max, parent.get('unit', '')))
                         if not values:
                             f_handle.write(ROW_FORMAT.format(child['shortcut'], child['description'], child.name, ''))
                             continue
