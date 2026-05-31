@@ -6,7 +6,7 @@ except ImportError:
 
 setup(
     name="enocean-extended",
-    version="1.0.0",
+    version="1.1.1",
     description="Enhanced EnOcean serial protocol implementation with dynamic EEP parsing",
     author="Pierre Leduc",
     author_email="p.leduc@etik.com",
