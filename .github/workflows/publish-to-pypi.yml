@@ -62,7 +62,8 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' # Only on manual trigger
+    # Only run on manual workflow dispatch, never on releases/tags
+    if: github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
     environment:
       name: testpypi
       url: https://test.pypi.org/p/enocean-extended
